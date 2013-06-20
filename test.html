@@ -41,7 +41,6 @@
 				var x = e.pageX - this.offsetLeft;
 				var y = e.pageY - this.offsetTop;
 
-
 				var hex = hexGrid.findByPixel(x, y);
 
 				if(!hex){
@@ -55,16 +54,6 @@
 				}
 
 			});
-
-			function pixelToHex(x, y){
-				var q = ((1/3*Math.sqrt(3) * (x) - 1/3 * y)) / size;
-				var r = (2/3 * y) / size;
-				var ret = {
-					q: Math.round(q),
-					r: Math.round(r)
-				};
-				return ret;
-			}
 
 			function takeadump(){
 				$('#mapDumpee').text(JSON.stringify(hexGrid.getMap()));
