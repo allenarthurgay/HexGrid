@@ -80,7 +80,7 @@ function HexRenderEngine(canvas,use3dRendering) {
     }
 
     var setMatrixUniforms = function() {
-        gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
+     //   gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
         gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
     }
 
@@ -242,31 +242,57 @@ function HexRenderEngine(canvas,use3dRendering) {
         gl.depthFunc(gl.LEQUAL);
     }
 
-    (function() {
-        if(!use3D || !supportsWebGL()) {
-            ctx_2D = canvas.getContext('2d');
-            use3D = false;
-            this.clearCanvas = clear2D;
-            drawHex = drawHex2D;
-            preRender = preRender2D;
-            postRender = postRender2D;
-        }
-        else {
-            initGl();
-            use3D = true;
-            this.clearCanvas = clear3D;
-            drawHex = drawHex3D;
-            preRender = preRender3D;
-            postRender = postRender3D;
-        }
-    })();
+
+
+	if(!use3D || !supportsWebGL()) {
+		ctx_2D = canvas.getContext('2d');
+		use3D = false;
+		this.clearCanvas = clear2D;
+		drawHex = drawHex2D;
+		preRender = preRender2D;
+		postRender = postRender2D;
+	}
+	else {
+		initGl();
+		use3D = true;
+		this.clearCanvas = clear3D;
+		drawHex = drawHex3D;
+		preRender = preRender3D;
+		postRender = postRender3D;
+	}
+
 }
 
 function HexGrid(canvas,use3D) {
     var hexSize = 25;
     var hexRenderList = [];
+	var hexLookup = {};
+	var map = null;
 
-    var renderer = new HexRenderEngine(canvas,use3D);
+    var renderer = new HexRenderEngine(canvas, use3D);
+
+	function makeHexToMapKey(mapTile){
+		return mapTile.x + "_" + mapTile.y + "_" + mapTile.z;
+	}
+
+	function mapHexToTile(hex, mapTile){
+		hexLookup[makeHexToMapKey(mapTile)] = {
+			hex: hex,
+			tile: mapTile
+		};
+	}
+
+
+	function addHexFromTile(mapTile){
+		var hex = new Hex(mapTile.x, mapTile.y, hexSize);
+		mapHexToTile(hex, mapTile);
+		hexRenderList.push(hex);
+	}
+
+	this.loadMap = function(mapData){
+		map = mapData;
+		mapData.forEach(addHexFromTile)
+	};
 
     this.draw = function() {
         renderer.drawHexes(hexRenderList);
