@@ -6,7 +6,6 @@ function Hex(x, y, radius) {
 	this.z = this.r
 	this.y = -this.x-this.z;
 
-
 	this.size = radius;
 	this.color = '#44f';
 	this.height = function() {return this.size * 2;}
