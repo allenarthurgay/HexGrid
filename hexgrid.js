@@ -2,14 +2,17 @@ function Hex(x,y,r) {
     this.x=x;
     this.y=y;
     this.size=r;
-    this.color='#44f';
+    this.color=[1,1,1,1];
     this.height=function(){return this.size * 2;}
     this.width=function(){return 1.7320508 * this.size;} //﻿1.7320508 is ~ Math.sqrt(3)
     this.equals = function(rHex) {
         return this.x == rHex.x && this.y == rHex.y;
     }
 }
-
+var cam_x = 6;
+var cam_y = 3;
+var cam_z = 13;
+var degree = -30.0;
 function HexRenderEngine(canvas,use3dRendering) {
     // render stuff -------------------------------
     var use3D = use3dRendering | false;
@@ -17,6 +20,7 @@ function HexRenderEngine(canvas,use3dRendering) {
     var ctx_2D = undefined;
     var drawHex = undefined;
     var pointUpHexVertexBuffer;
+    var hexOutlineVertexBuffer;
     var fieldOfVision = 90;
     var mvMatrix = mat4.create(); //modelview
     var pMatrix = mat4.create();  //perspective
@@ -75,7 +79,7 @@ function HexRenderEngine(canvas,use3dRendering) {
         shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
         shaderProgram.vertexColorAttribute = gl.getAttribLocation(shaderProgram, "aVertexColor");
 
-        //shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
+        shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
         shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
     }
 
@@ -102,8 +106,10 @@ function HexRenderEngine(canvas,use3dRendering) {
              0,-0.5
          */
         pointUpHexVertexBuffer = gl.createBuffer();
+        hexOutlineVertexBuffer = gl.createBuffer();
 
-        var vertices = [0.0,0.0,0.0];
+        var hexVerts = [0.0,0.0,0.0];
+        var outlineVerts = [];
 
         for (var i = 0; i <= 6; i++) {
             var angle = 2 * Math.PI / 6 * (0.5 - i);
@@ -111,40 +117,77 @@ function HexRenderEngine(canvas,use3dRendering) {
             var x_i = 0.5 * Math.cos(angle);
             var y_i = 0.5 * Math.sin(angle);
 
-            vertices.push(x_i);
-            vertices.push(y_i);
-            vertices.push(0.0);
+            hexVerts.push(x_i);
+            hexVerts.push(y_i);
+            hexVerts.push(0.0);
+            outlineVerts.push(x_i);
+            outlineVerts.push(y_i);
+            outlineVerts.push(0.01);
         }
 
         // re add first point to complete fan
-        vertices.push(0.5 * Math.cos(2 * Math.PI / 3));
-        vertices.push(0.5 * Math.sin(2 * Math.PI / 3));
-        vertices.push(0.0);
+        hexVerts.push(0.5 * Math.cos(2 * Math.PI / 3));
+        hexVerts.push(0.5 * Math.sin(2 * Math.PI / 3));
+        hexVerts.push(0.0);
+
+        //re add first point to complete outline
+        outlineVerts.push(outlineVerts[0]);
+        outlineVerts.push(outlineVerts[1]);
+        outlineVerts.push(0.0);
 
         gl.bindBuffer(gl.ARRAY_BUFFER, pointUpHexVertexBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(hexVerts), gl.STATIC_DRAW);
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
         pointUpHexVertexBuffer.itemSize = 3;
         pointUpHexVertexBuffer.numItems = 8;
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, hexOutlineVertexBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(outlineVerts), gl.STATIC_DRAW);
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+        hexOutlineVertexBuffer.itemSize = 3;
+        hexOutlineVertexBuffer.numItems = 7;
     }
 
+    function createModelViewMatrix(x,y,r) {
+        mat4.identity(mvMatrix);
+        mat4.translate(mvMatrix, [-cam_x,-cam_y,-cam_z]);
+        mat4.rotate(mvMatrix,degree*Math.PI/180.0,[1,0,0],mvMatrix);
+        mat4.translate(mvMatrix,[x,y,0]);
+        mat4.scale(mvMatrix,[r*2,r*2,1]);
+
+    }
     var drawHex3D = function(x,y,r,fillColor) {
 
+        createModelViewMatrix(x,y,r);
+
         gl.bindBuffer(gl.ARRAY_BUFFER, pointUpHexVertexBuffer);
-        mat4.identity(mvMatrix);
-        mat4.translate(mvMatrix, [x,y,0]);
+
+        //set color
+        gl.vertexAttrib4fv(shaderProgram.vertexColorAttribute, new Float32Array(fillColor));
+
+
         setMatrixUniforms();
+
         gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, pointUpHexVertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
         gl.drawArrays(gl.TRIANGLE_FAN,0,pointUpHexVertexBuffer.numItems);
+        gl.bindBuffer(gl.ARRAY_BUFFER,null);
 
+        //outline =========================
+        gl.bindBuffer(gl.ARRAY_BUFFER, hexOutlineVertexBuffer);
+        //set color
+        gl.vertexAttrib4fv(shaderProgram.vertexColorAttribute, new Float32Array([0,0,1,1]));
+        setMatrixUniforms();
+        gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, hexOutlineVertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
+        gl.drawArrays(gl.LINE_STRIP,0,hexOutlineVertexBuffer.numItems);
         gl.bindBuffer(gl.ARRAY_BUFFER,null);
     }
 
     var drawHex2D = function(x,y,r,fillColor) {
         var g = ctx_2D.createRadialGradient(x,y,0,x,y,0.8*r);
         g.addColorStop(0,'#fff');
-        g.addColorStop(1,fillColor);
+        g.addColorStop(1,'#afa');
         ctx_2D.fillStyle = g;
         ctx_2D.beginPath();
         ctx_2D.lineWidth = 4;
@@ -182,7 +225,9 @@ function HexRenderEngine(canvas,use3dRendering) {
     }
 
     var preRender3D = function() {
+        mat4.identity(pMatrix);
         mat4.perspective(fieldOfVision/2.0, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, pMatrix);
+
     }
 
     var preRender2D = function() {}
@@ -242,28 +287,26 @@ function HexRenderEngine(canvas,use3dRendering) {
         gl.depthFunc(gl.LEQUAL);
     }
 
-    (function() {
-        if(!use3D || !supportsWebGL()) {
-            ctx_2D = canvas.getContext('2d');
-            use3D = false;
-            this.clearCanvas = clear2D;
-            drawHex = drawHex2D;
-            preRender = preRender2D;
-            postRender = postRender2D;
-        }
-        else {
-            initGl();
-            use3D = true;
-            this.clearCanvas = clear3D;
-            drawHex = drawHex3D;
-            preRender = preRender3D;
-            postRender = postRender3D;
-        }
-    })();
+    if(!use3D || !supportsWebGL()) {
+        ctx_2D = canvas.getContext('2d');
+        use3D = false;
+        this.clearCanvas = clear2D;
+        drawHex = drawHex2D;
+        preRender = preRender2D;
+        postRender = postRender2D;
+    }
+    else {
+        initGl();
+        use3D = true;
+        this.clearCanvas = clear3D;
+        drawHex = drawHex3D;
+        preRender = preRender3D;
+        postRender = postRender3D;
+    }
 }
 
 function HexGrid(canvas,use3D) {
-    var hexSize = 25;
+    var hexSize = 1.0;
     var hexRenderList = [];
 
     var renderer = new HexRenderEngine(canvas,use3D);
