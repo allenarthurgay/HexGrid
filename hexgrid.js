@@ -319,6 +319,21 @@ function HexGrid(canvas, use3D) {
 		hexRenderList.push(new Hex(x, y, hexSize));
 	}
 
+	function pixelToHex(x, y){
+		var q = ((1/3*Math.sqrt(3) * (x) - 1/3 * y)) / size;
+		var r = (2/3 * y) / size;
+		var ret = {
+			q: Math.round(q),
+			r: Math.round(r)
+		};
+		return ret;
+	}
+
+	this.findByPixel = function(x, y){
+		var coor = pixelToHex(x, y);
+		return this.find(coor.q, coor.r);
+	};
+
 	this.find = function(x, y) {
 		var h = new Hex(x, y, hexSize);
 		for (var i = 0; i < hexRenderList.length; ++i) {

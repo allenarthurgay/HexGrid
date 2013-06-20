@@ -41,8 +41,8 @@
 				var x = e.pageX - this.offsetLeft;
 				var y = e.pageY - this.offsetTop;
 
-				var hexCoor = pixelToHex(x, y);
-				var hex = hexGrid.find(hexCoor.q, hexCoor.r);
+
+				var hex = hexGrid.findByPixel(x, y);
 
 				if(!hex){
 					return;
