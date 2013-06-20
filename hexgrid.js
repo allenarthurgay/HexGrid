@@ -9,8 +9,8 @@ function Hex(x,y,r) {
         return this.x == rHex.x && this.y == rHex.y;
     }
 }
-var cam_x = 6;
-var cam_y = 3;
+var cam_x = 0;
+var cam_y = 0;
 var cam_z = 13;
 var degree = -30.0;
 function HexRenderEngine(canvas,use3dRendering) {
@@ -214,9 +214,9 @@ function HexRenderEngine(canvas,use3dRendering) {
 
         for(var i = 0; i < hexes.length; ++i) {
             var hex = hexes[i];
-            var x = hex.y % 2 == 0 ? hex.width() : hex.width() / 2.0;
-            var y = hex.height() / 2.0 + (hex.height() * hex.y * 3 / 4.0);
-            x += hex.width() * hex.x;
+            var x = hex.width() * (hex.x + hex.y / 2.0);
+            var y = hex.height() * hex.y * 3 / 4.0;
+
 
             drawHex(x,y,hex.size,hex.color);
         }
