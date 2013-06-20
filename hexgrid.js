@@ -294,6 +294,10 @@ function HexGrid(canvas,use3D) {
 		mapData.forEach(addHexFromTile)
 	};
 
+	this.getMap = function(){
+		return map;
+	}
+
     this.draw = function() {
         renderer.drawHexes(hexRenderList);
     }
