@@ -1,0 +1,75 @@
+<html>
+	<body>
+		<canvas id="canvas" width="320" height="240" style="border: 1px solid #000">
+		</canvas>
+        <script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
+
+        <script id="shader-fs" type="x-shader/x-fragment">
+            precision mediump float;
+
+            void main(void) {
+                gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+            }
+        </script>
+
+        <script id="shader-vs" type="x-shader/x-vertex">
+            attribute vec3 aVertexPosition;
+
+            uniform mat4 uMVMatrix;
+
+            void main(void) {
+                gl_Position = uMVMatrix * vec4(aVertexPosition, 1.0);
+            }
+        </script>
+
+        <script type="text/javascript" src="./hexgrid.js"></script>
+		<script type="text/javascript">
+            // thanks javascript % bug...
+            // taken from: http://javascript.about.com/od/problemsolving/a/modulobug.htm
+            Number.prototype.mod = function(n) {
+                return ((this%n)+n)%n;
+            }
+
+			var c = document.getElementById('canvas');
+
+            var gridWidth = 7;
+            var gridHeight = 6;
+
+            var hexGrid = new HexGrid(c);
+            var hexes = 13;
+            var x = 0;
+            var y = 0;
+
+            function nextX() {
+                return (x+1).mod(gridWidth);
+            }
+            function nextY() {
+                return x == 0 ? (y+1).mod(gridHeight) : y;
+            }
+
+            hexGrid.add(0,0);
+            hexGrid.add(0,1);
+            hexGrid.add(1,1);
+            hexGrid.add(1,3);
+            hexGrid.add(3,4);
+            hexGrid.add(3,4);
+            hexGrid.add(5,6);
+
+            hexGrid.update = function() {
+                var rx = (x-hexes).mod(gridWidth);
+                var ry = (y - Math.floor((rx + hexes)/gridWidth)).mod(gridHeight);
+                hexGrid.add(x,y);
+                hexGrid.remove(rx,ry);
+                x = nextX();
+                y = nextY();
+            }
+
+			function render() {
+				//hexGrid.update();
+                hexGrid.renderOneFrame();
+				window.setTimeout(render, 80);
+			}
+		</script>
+	</body>
+</html>
+
