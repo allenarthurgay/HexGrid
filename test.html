@@ -27,8 +27,8 @@
 		<script type="text/javascript">
 			var generatedMap = [];
 
-			for(var i=-2; i < 2; i++){
-				for(var j=-2; j < 2; j++){
+			for(var i=0; i < 5; i++){
+				for(var j=0; j < 5; j++){
 					generatedMap.push({ x: i, y: j, z: 0});
 				}
 			}
@@ -42,6 +42,7 @@
 				var x = e.pageX - this.offsetLeft;
 				var y = e.pageY - this.offsetTop;
 
+				console.log('clicked: ', x, y);
 				var hexCoor = pixelToHex(x, y);
 				var hex = hexGrid.find(hexCoor.q, hexCoor.r);
 				//console.log(x, y, hexCoor) ;
@@ -101,7 +102,7 @@
 				 y = -x - r
 				 */
 				var halfSize = size/2;
-				var q = ((1/3*Math.sqrt(3) * (x - halfSize) - 1/3 * y)) / size;
+				var q = ((1/3*Math.sqrt(3) * (x) - 1/3 * y)) / size;
 				var r = (2/3 * y) / size;
 
 				console.log('ix to hex', q, r);

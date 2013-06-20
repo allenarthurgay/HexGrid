@@ -177,12 +177,13 @@ function HexRenderEngine(canvas, use3dRendering) {
 
 		for (var i = 0; i < hexes.length; ++i) {
 			var hex = hexes[i];
-			var x = hex.width() * (hex.q + hex.r/2)
-			var y = hex.height() * hex.r
+			//var x = hex.width() * (hex.q + hex.r/2)
+			//var y = hex.height() * hex.r
 		//	console.log(hex.q, )
-			//var x = hex.q % 2 == 1 ? 0 : hex.width() / 2.0;
-			//var y =  (hex.height() * hex.q * 3 / 4.0);
-			x += hex.width() * hex.r;
+			//var x = hex.q % 2 == 0 ? 0 : hex.width() / 2.0;
+			var x= hex.width() * (hex.q + hex.r / 2);
+			var y =  hex.height() * hex.r * 3 / 4.0;
+		//	x += hex.width() * hex.q;
 
 			//console.log(hex.q, hex.r, x, y);
 			drawHex(x, y, hex.size, hex.color);
