@@ -89,7 +89,7 @@ function HexRenderEngine(canvas, use3dRendering) {
 	}
 
 	var setMatrixUniforms = function() {
-		//   gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
+		gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
 		gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
 	}
 
@@ -191,8 +191,14 @@ function HexRenderEngine(canvas, use3dRendering) {
 
 	var drawHex2D = function(x, y, r, fillColor) {
 		var g = ctx_2D.createRadialGradient(x, y, 0, x, y, 0.8 * r);
+        var color = '#';
+        for(var c = 0; c < 3; ++c) {
+            var val = (255 * fillColor[c]).toString(16);
+            var pad = "00";
+            color = color + pad.substr(0,pad.length - val.length) + val;
+        }
 		g.addColorStop(0, '#fff');
-        g.addColorStop(1,'#afa');
+        g.addColorStop(1,color);
 		ctx_2D.fillStyle = g;
 		ctx_2D.beginPath();
 		ctx_2D.lineWidth = 4;

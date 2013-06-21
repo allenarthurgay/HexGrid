@@ -3,7 +3,8 @@
 		<canvas id="canvas" width="800" height="600" style="border: 1px solid #000">
 		</canvas>
         <script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
-		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script><!-- -->
+        <!-- <script src="jquery.min.js"></script> <!-- -->
 
         <script id="shader-fs" type="x-shader/x-fragment">
             precision mediump float;
@@ -53,11 +54,11 @@
 				if(!hex){
 					return;
 				}
-				if(hex.color == 'white'){
-					hex.color = 'green';
+				if(hex.color[0] == 1){
+					hex.color = [0,1,0,1];
 				}
 				else{
-					hex.color = 'white';
+					hex.color = [1,1,1,1];
 				}
 
 			});
