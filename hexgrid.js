@@ -387,12 +387,12 @@ function HexGrid(canvas, use3D) {
 
 	var renderer = new HexRenderEngine(canvas, use3D);
 
-	function makeHexToMapKey(mapTile) {
-		return mapTile.x + "_" + mapTile.y + "_" + mapTile.z;
+	function makeHexToMapKey(q, r) {
+		return q + "_" + r ;
 	}
 
 	function mapHexToTile(hex, mapTile) {
-		hexLookup[makeHexToMapKey(mapTile)] = {
+		hexLookup[makeHexToMapKey(hex.q, hex.r)] = {
 			hex: hex,
 			tile: mapTile
 		};
@@ -436,21 +436,24 @@ function HexGrid(canvas, use3D) {
         x = point[0];
         y = point[1];
 		var hexToFind = pixelToHex(x, y);
-		console.log('hex coords: ', hexToFind.q, hexToFind.r);
 		return this.find(hexToFind.q, hexToFind.r);
 	};
 
 	this.find = function(x, y) {
-		var h = new Hex(x, y, hexSize);
-		for (var i = 0; i < hexRenderList.length; ++i) {
-			if (hexRenderList[i].equals(h)) {
-				return hexRenderList[i];
-			}
+		var key = makeHexToMapKey(x, y);
+		var lookup = hexLookup[key];
+		if(lookup){
+			return lookup.hex;
 		}
 		return null;
 	}
 
 	this.remove = function(x, y) {
+		var key = makeHexToMapKey(x, y);
+		var lookup = hexLookup[key];
+		if(lookup){
+			hexLookup[key] = null;
+		}
 		var h = new Hex(x, y, hexSize);
 		for (var i = 0; i < hexRenderList.length; ++i) {
 			if (hexRenderList[i].equals(h)) {
@@ -462,6 +465,7 @@ function HexGrid(canvas, use3D) {
 
 	this.removeAll = function() {
 		hexRenderList = [];
+		map = {};
 	}
 
 	this.applyToAllHexes = function(func) {
