@@ -114,7 +114,7 @@
 				e.cancelBubble=true;
 				e.preventDefault();
 				var yDelta = e.wheelDeltaY;
-				cam_z += yDelta/50;
+				hexGrid.getCamera().moveZ(-yDelta/50);
 			}
 
 
