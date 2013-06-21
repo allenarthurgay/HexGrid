@@ -44,6 +44,8 @@ function PatrolAI(hexGrid, start, end) {
     }
 
     function reCalculatePath() {
+		var me = path[pathPos];
+		me.color = clearPathColor;
         pathPos = 0;
         setNewPatrolPath(path[path.length-1])
     }
