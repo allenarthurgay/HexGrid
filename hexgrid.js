@@ -15,7 +15,7 @@ function Hex(q, r, radius) {
 	this.r = r;
 
 	this.x = this.q;
-	this.z = this.r
+	this.z = this.r;
 	this.y = -this.x - this.z;
 
 	this.size = radius;
@@ -28,125 +28,125 @@ function Hex(q, r, radius) {
 }
 
 function HexCamera(glContext) {
-    var gl = glContext;
-    var fieldOfView = 90;
-    var cam_x = 0;
-    var cam_y = 0;
-    var cam_z = 13;
-    var degree = -30.0;
+	var gl = glContext;
+	var fieldOfView = 90;
+	var cam_x = 20;
+	var cam_y = 10;
+	var cam_z = 30;
+	var degree = -30.0;
 
-    function getViewMatrix() {
-        var m = mat4.create();
-        mat4.identity(m);
-        mat4.translate(m, [-cam_x, -cam_y, -cam_z]);
-        mat4.rotate(m, degree * Math.PI / 180.0, [1, 0, 0], m);
-        return m;
-    }
+	function getViewMatrix() {
+		var m = mat4.create();
+		mat4.identity(m);
+		mat4.translate(m, [-cam_x, -cam_y, -cam_z]);
+		mat4.rotate(m, degree * Math.PI / 180.0, [1, 0, 0], m);
+		return m;
+	}
 
-    function getProjectionMatrix() {
-        var m = mat4.create();
-        mat4.identity(m);
-        mat4.perspective(fieldOfView / 2.0, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, m);
-        return m;
-    }
+	function getProjectionMatrix() {
+		var m = mat4.create();
+		mat4.identity(m);
+		mat4.perspective(fieldOfView / 2.0, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, m);
+		return m;
+	}
 
-    function unprojectPoint(screenX, screenY) {
-        var cameraMatrix;
-        var projectionMatrix;
-        var inverseMatrix = mat4.create();
-        var pvMat = mat4.create();
+	function unprojectPoint(screenX, screenY) {
+		var cameraMatrix;
+		var projectionMatrix;
+		var inverseMatrix = mat4.create();
+		var pvMat = mat4.create();
 
-        mat4.identity(inverseMatrix);
-        cameraMatrix = getViewMatrix();
-        projectionMatrix = getProjectionMatrix();
+		mat4.identity(inverseMatrix);
+		cameraMatrix = getViewMatrix();
+		projectionMatrix = getProjectionMatrix();
 
-        mat4.multiply(projectionMatrix, cameraMatrix, pvMat);
-        mat4.inverse(pvMat, inverseMatrix);
+		mat4.multiply(projectionMatrix, cameraMatrix, pvMat);
+		mat4.inverse(pvMat, inverseMatrix);
 
-        var inNear = [];
-        inNear[0] = (screenX - gl.viewportX) / gl.viewportWidth * 2.0 - 1.0; // normalize window X coord to -1 to 1
-        inNear[1] = (screenY - gl.viewportY) / gl.viewportHeight * 2.0 - 1.0; // normalize window Y coord to -1 to 1
-        inNear[2] = -1.0; // 2.0 * sz - 1.0 but optimized for near plane click
-        inNear[3] = 1.0; // 1 = point, 0 = vector
+		var inNear = [];
+		inNear[0] = (screenX - gl.viewportX) / gl.viewportWidth * 2.0 - 1.0; // normalize window X coord to -1 to 1
+		inNear[1] = (screenY - gl.viewportY) / gl.viewportHeight * 2.0 - 1.0; // normalize window Y coord to -1 to 1
+		inNear[2] = -1.0; // 2.0 * sz - 1.0 but optimized for near plane click
+		inNear[3] = 1.0; // 1 = point, 0 = vector
 
-        var inFar = [];
-        inFar[0] = (screenX - gl.viewportX) / gl.viewportWidth * 2.0 - 1.0; // normalize window X coord to -1 to 1
-        inFar[1] = (screenY - gl.viewportY) / gl.viewportHeight * 2.0 - 1.0; // normalize window Y coord to -1 to 1
-        inFar[2] = 1.0; // 2.0 * sz - 1.0 but optimized for far plane click
-        inFar[3] = 1.0; // 1 = point, 0 = vector
+		var inFar = [];
+		inFar[0] = (screenX - gl.viewportX) / gl.viewportWidth * 2.0 - 1.0; // normalize window X coord to -1 to 1
+		inFar[1] = (screenY - gl.viewportY) / gl.viewportHeight * 2.0 - 1.0; // normalize window Y coord to -1 to 1
+		inFar[2] = 1.0; // 2.0 * sz - 1.0 but optimized for far plane click
+		inFar[3] = 1.0; // 1 = point, 0 = vector
 
-        var near = [0, 0, 0, 0];
-        var far = [0, 0, 0, 0];
+		var near = [0, 0, 0, 0];
+		var far = [0, 0, 0, 0];
 
-        mat4.multiply(inverseMatrix, inNear, near);
+		mat4.multiply(inverseMatrix, inNear, near);
 
-        if (near[3] == 0.0) {
-            console.log("unproject point resulted in 0 for w coordinate. Does this ever happen?");
-            return null;
-        }
+		if (near[3] == 0.0) {
+			console.log("unproject point resulted in 0 for w coordinate. Does this ever happen?");
+			return null;
+		}
 
-        //normalize output
-        near[3] = 1.0 / near[3];
-        near[0] = near[0] * near[3];
-        near[1] = near[1] * near[3];
-        near[2] = near[2] * near[3];
+		//normalize output
+		near[3] = 1.0 / near[3];
+		near[0] = near[0] * near[3];
+		near[1] = near[1] * near[3];
+		near[2] = near[2] * near[3];
 
 
-        mat4.multiply(inverseMatrix, inFar, far);
+		mat4.multiply(inverseMatrix, inFar, far);
 
-        if (far[3] == 0.0) {
-            console.log("unproject point resulted in 0 for w coordinate. Does this ever happen?");
-            return null;
-        }
+		if (far[3] == 0.0) {
+			console.log("unproject point resulted in 0 for w coordinate. Does this ever happen?");
+			return null;
+		}
 
-        //normalize output
-        far[3] = 1.0 / far[3];
-        far[0] = far[0] * far[3];
-        far[1] = far[1] * far[3];
-        far[2] = far[2] * far[3];
+		//normalize output
+		far[3] = 1.0 / far[3];
+		far[0] = far[0] * far[3];
+		far[1] = far[1] * far[3];
+		far[2] = far[2] * far[3];
 
-        return [
-            [near[0], near[1], near[2]],
-            [far[0], far[1], far[2]]
-        ];
-    }
+		return [
+			[near[0], near[1], near[2]],
+			[far[0], far[1], far[2]]
+		];
+	}
 
-    function move(x,y,z) {
-        cam_x += x;
-        cam_y += y;
-        cam_z += z;
-    }
+	function move(x,y,z) {
+		cam_x += x;
+		cam_y += y;
+		cam_z += z;
+	}
 
-    function moveX(x) {
-        move(x,0,0);
-    }
+	function moveX(x) {
+		move(x,0,0);
+	}
 
-    function moveY(y) {
-        move(0,y,0);
-    }
+	function moveY(y) {
+		move(0,y,0);
+	}
 
-    function moveZ(z) {
-        move(0,0,z);
-    }
+	function moveZ(z) {
+		move(0,0,z);
+	}
 
-    function getPos() {
-        return [cam_x,cam_y,cam_z];
-    }
+	function getPos() {
+		return [cam_x,cam_y,cam_z];
+	}
 
-    function adjustAngleDegrees(deltaDegrees) {
-        degree += deltaDegrees;
-    }
-    return {
-        moveX: moveX,
-        moveY: moveY,
-        moveZ: moveZ,
-        move: move,
-        getPos: getPos,
-        adjustAngleDegrees: adjustAngleDegrees,
-        getViewMatrix : getViewMatrix,
-        getProjectionMatrix: getProjectionMatrix,
-        unprojectPoint: unprojectPoint
-    };
+	function adjustAngleDegrees(deltaDegrees) {
+		degree += deltaDegrees;
+	}
+	return {
+		moveX: moveX,
+		moveY: moveY,
+		moveZ: moveZ,
+		move: move,
+		getPos: getPos,
+		adjustAngleDegrees: adjustAngleDegrees,
+		getViewMatrix : getViewMatrix,
+		getProjectionMatrix: getProjectionMatrix,
+		unprojectPoint: unprojectPoint
+	};
 
 }
 
@@ -157,7 +157,7 @@ function HexRenderEngine(canvas) {
 	var mvMatrix = mat4.create(); //modelview
 	var pMatrix = mat4.create();  //perspective
 	var shaderProgram;
-    var camera;
+	var camera;
 
 	function getShader(id) {
 		var shaderScript = document.getElementById(id);
@@ -267,7 +267,7 @@ function HexRenderEngine(canvas) {
 	}
 
 	function setModelViewMatrix(x, y, size) {
-        mvMatrix = camera.getViewMatrix();
+		mvMatrix = camera.getViewMatrix();
 		mat4.translate(mvMatrix, [x, y, 0]);
 		mat4.scale(mvMatrix, [size * 2, size * 2, 1]);
 	}
@@ -313,21 +313,21 @@ function HexRenderEngine(canvas) {
 		postRender();
 	}
 
-    function clearCanvas() {
-        gl.clearColor(0, 0, 0, 1.0);
-        gl.viewportX = 0;
-        gl.viewportY = 0;
-        gl.viewport(gl.viewportX, gl.viewportY, gl.viewportWidth, gl.viewportHeight);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    }
+	function clearCanvas() {
+		gl.clearColor(0, 0, 0, 1.0);
+		gl.viewportX = 0;
+		gl.viewportY = 0;
+		gl.viewport(gl.viewportX, gl.viewportY, gl.viewportWidth, gl.viewportHeight);
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+	}
 
 	function preRender() {
-        pMatrix = camera.getProjectionMatrix();
+		pMatrix = camera.getProjectionMatrix();
 	}
 
 	function postRender() {
 
-    }
+	}
 
 	function intersectLineWithXYPlane(far, near) {
 		var vector = [far[0] - near[0], far[1] - near[1], far[2] - near[2]];
@@ -341,53 +341,53 @@ function HexRenderEngine(canvas) {
 		return intersectLineWithXYPlane(nearFarPoints[0], nearFarPoints[1]);
 	}
 
-    function initGl() {
-        var contextNames = ["webgl", "experimental-webgl", "moz-webgl", "webkit-3d"];
+	function initGl() {
+		var contextNames = ["webgl", "experimental-webgl", "moz-webgl", "webkit-3d"];
 
-        for (var i = 0; i < contextNames.length; i++) {
-            try {
-                gl = canvas.getContext(contextNames[i]);
-                if (gl) {
-                    break;
-                }
+		for (var i = 0; i < contextNames.length; i++) {
+			try {
+				gl = canvas.getContext(contextNames[i]);
+				if (gl) {
+					break;
+				}
 
-            } catch (e) {
-                console.log("WebGL is not supported by this configuration: " + contextNames[i]);
-            }
-            if (gl === undefined) {
-                console.log("WebGL is not supported by this configuration: " + contextNames[i]);
-            }
-        }
+			} catch (e) {
+				console.log("WebGL is not supported by this configuration: " + contextNames[i]);
+			}
+			if (gl === undefined) {
+				console.log("WebGL is not supported by this configuration: " + contextNames[i]);
+			}
+		}
 
-        try {
-            gl.viewportWidth = canvas.width;
-            gl.viewportHeight = canvas.height;
-        }
-        catch (e) {
-            console.log(e.message);
-        }
+		try {
+			gl.viewportWidth = canvas.width;
+			gl.viewportHeight = canvas.height;
+		}
+		catch (e) {
+			console.log(e.message);
+		}
 
-        initShaders();
-        initBuffers();
-        gl.enable(gl.DEPTH_TEST);
-        gl.depthFunc(gl.LEQUAL);
-    }
+		initShaders();
+		initBuffers();
+		gl.enable(gl.DEPTH_TEST);
+		gl.depthFunc(gl.LEQUAL);
+	}
 
-    initGl();
+	initGl();
 
 	if (!gl) {
 		alert('you do not support!');
-        return;
+		return;
 	}
 
-    camera = new HexCamera(gl);
+	camera = new HexCamera(gl);
 
-    return {
-        camera: camera,
-        drawHexes: drawHexes,
-        clearCanvas: clearCanvas,
-        projectScreenCoordToXYPlane: projectScreenCoordToXYPlane
-    }
+	return {
+		camera: camera,
+		drawHexes: drawHexes,
+		clearCanvas: clearCanvas,
+		projectScreenCoordToXYPlane: projectScreenCoordToXYPlane
+	}
 }
 
 function HexGrid(canvas, use3D) {
@@ -397,7 +397,6 @@ function HexGrid(canvas, use3D) {
 	var map = null;
 
 	var renderer = new HexRenderEngine(canvas, use3D);
-
 
 	function makeHexToMapKey(q, r) {
 		return q + "_" + r ;
@@ -438,9 +437,8 @@ function HexGrid(canvas, use3D) {
 		return hexes;
 	};
 
-
 	this.vectorDistanceBetween = function vectorDistanceBetween(hex1, hex2){
-	  	var dX = hex2.x - hex1.x;
+		var dX = hex2.x - hex1.x;
 		var dY = hex2.y - hex1.y;
 		var dZ = hex2.z - hex1.z;
 
@@ -487,9 +485,9 @@ function HexGrid(canvas, use3D) {
 	};
 
 	this.findByPixel = function(x, y) {
-        var point = renderer.projectScreenCoordToXYPlane(x, y);
-        x = point[0];
-        y = point[1];
+		var point = renderer.projectScreenCoordToXYPlane(x, y);
+		x = point[0];
+		y = point[1];
 		var hexToFind = pixelToHex(x, y);
 		return this.find(hexToFind.q, hexToFind.r);
 	};
@@ -538,37 +536,89 @@ function HexGrid(canvas, use3D) {
 		this.draw();
 	}
 
-	function findNeighbors(hex) {
+	var neighborDeltas = [
+		[+1, 0],
+		[+1, -1],
+		[ 0, -1],
+		[-1, 0],
+		[-1, +1],
+		[ 0, +1]
+	];
 
-		var neighborDeltas = [
-			[+1, 0],
-			[+1, -1],
-			[ 0, -1],
-			[-1, 0],
-			[-1, +1],
-			[ 0, +1]
-		];
+	this.getNeighbor = function(hex, neighborIdx){
+		return this.find(hex.q + neighborDeltas[neighborIdx][0], hex.r + neighborDeltas[neighborIdx][1]);
+	}
+
+	this.findNeighbors = function(hex) {
 
 		var neighbors = [];
 		for (var i = 0; i < neighborDeltas.length; ++i) {
-			var n = this.find(hex.q + neighborDeltas[i][0], hex.r + neighborDeltas[i][1]);
+			var n = this.getNeighbor(hex,i);
 			if (n) {
 				neighbors.push(n);
 			}
 		}
 		return neighbors;
 	}
-	this.findNeighbors = findNeighbors;
+
+	this.getRing = function(hex,distance) {
+		var q = hex.q-distance, r = hex.r + distance;
+		var ring = [];
+
+		for(var i = 0; i < neighborDeltas.length; ++i) {
+			for(var j = 0; j < distance; ++j) {
+				var h = this.find(q, r);
+				if(h){
+					ring.push(h);
+				}
+				q += neighborDeltas[i][0];
+				r += neighborDeltas[i][1];
+			}
+		}
+		return ring;
+	}
+
+	this.getRange = function(hex, distance) {
+		var range = [hex];
+		for(var dx = -distance; dx <=distance; ++dx) {
+			for(var dy = Math.max(-distance, -dx-distance); dy <= Math.min(distance, -dx + distance); ++dy) {
+				var dz = -dx-dy;
+
+				var q = hex.x + dx;
+				var r = hex.z + dz;
+				var h = this.find(q,r);
+				if(h) {
+					range.push(h);
+				}
+			}
+		}
+		return range;
+	}
+
+	this.getRangeIntersection= function(h1,d1,h2,d2) {
+		var r1 = this.getRange(h1, d1);
+		var r2 = this.getRange(h2, d2);
+		var intersection = [];
+		for(var i = 0; i < r1.length; ++i){
+			for(var j = 0; j < r2.length; ++j) {
+				if(r1[i].equals(r2[j])){
+					intersection.push(r1[i]);
+				}
+			}
+		}
+		return intersection;
+	}
 
 	this.update = function() {}
 
 	this.getCamera = function() {
-        return renderer.camera;
-    }
+		return renderer.camera;
+	}
 
 	var pathFinder = AStarPathFinderFactory(this, function(){return 1;});
 	this.getPath = pathFinder.findPath;
 }
+
 
 /**
  *
