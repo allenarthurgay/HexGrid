@@ -1,6 +1,18 @@
-function Hex(x, y, radius) {
+function Vector(x, y, z){
+	this.x = x;
+	this.y = y;
+	this.z = z;
+
+}
+
+function HexToQR(x, y, z){
 	this.q = x;
-	this.r = y;
+	this.r = z;
+}
+
+function Hex(q, r, radius) {
+	this.q = q;
+	this.r = r;
 
 	this.x = this.q;
 	this.z = this.r
@@ -295,7 +307,6 @@ function HexRenderEngine(canvas) {
 			var hex = hexes[i];
 			var x = hex.width() * (hex.q + hex.r / 2);
 			var y = hex.height() * hex.r * 3 / 4.0;
-
 			drawHex(x, y, hex.size, hex.color);
 		}
 
@@ -404,6 +415,48 @@ function HexGrid(canvas, use3D) {
 		hexRenderList.push(hex);
 	}
 
+	this.getLine = function(hex1, hex2){
+		var vecDistance = this.vectorDistanceBetween(hex1, hex2);
+		var distance = this.scalarDistance(hex1, hex2);
+		var hexes = [];
+		for (var i = 0; i < distance; i++) {
+			var factor = i / distance;
+			var dX = Math.round(vecDistance.x * factor);
+			var dY = Math.round(vecDistance.y * factor);
+			var dZ = Math.round(vecDistance.z * factor);
+
+			var nextX = hex1.x + dX;
+			var nextY = hex1.y + dY;
+			var nextZ = hex1.z + dZ;
+			var blah = new HexToQR(nextX, nextY, nextZ);
+			var realHex = this.find(blah.q, blah.r);
+			if (realHex) {
+				hexes.push(realHex);
+			}
+		}
+		return hexes;
+	};
+
+	this.vectorDistanceBetween = function vectorDistanceBetween(hex1, hex2){
+	  	var dX = hex2.x - hex1.x;
+		var dY = hex2.y - hex1.y;
+		var dZ = hex2.z - hex1.z;
+
+		return {
+			x: dX,
+			y: dY,
+			z: dZ
+		};
+	};
+
+	this.scalarDistance = function hexDistance(hex1, hex2){
+		var abs = Math.abs,
+			x1 = hex1.x, y1=hex1.y, z1=hex1.z,
+			x2 = hex2.x, y2 = hex2.y, z2 = hex2.z;
+
+		return (abs(x1 - x2) + abs(y1 - y2) + abs(z1 - z2)) / 2;
+	}
+
 	this.loadMap = function(mapData) {
 		map = mapData;
 		mapData.forEach(addHexFromTile)
@@ -411,15 +464,15 @@ function HexGrid(canvas, use3D) {
 
 	this.getMap = function() {
 		return map;
-	}
+	};
 
 	this.draw = function() {
 		renderer.drawHexes(hexRenderList);
-	}
+	};
 
 	this.clear = function() {
 		renderer.clearCanvas();
-	}
+	};
 
 	function pixelToHex(x, y) {
 		var q = ((1 / 3 * Math.sqrt(3) * (x) - 1 / 3 * y)) / hexSize;
@@ -429,7 +482,7 @@ function HexGrid(canvas, use3D) {
 			r: Math.round(r)
 		};
 		return ret;
-	}
+	};
 
 	this.findByPixel = function(x, y) {
         var point = renderer.projectScreenCoordToXYPlane(x, y);
@@ -446,7 +499,7 @@ function HexGrid(canvas, use3D) {
 			return lookup.hex;
 		}
 		return null;
-	}
+	};
 
 	this.remove = function(x, y) {
 		var key = makeHexToMapKey(x, y);
