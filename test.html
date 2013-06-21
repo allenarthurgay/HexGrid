@@ -54,6 +54,7 @@
 		RingSingle: 'ring-single',
 		RingSprial: 'ring-spiral',
 		Range: 'range',
+        AI: 'AI',
 		Reset: null
 	}
 </script>
@@ -173,7 +174,7 @@
 		e.cancelBubble = true;
 		e.preventDefault();
 		var yDelta = e.wheelDeltaY;
-		cam.moveZ(yDelta/50);
+		cam.moveZ(-yDelta/50);
 	}
 
 	function drawIntersection(hex) {
@@ -200,9 +201,12 @@
 		}
 		if (hex) {
 
-			setHexAndNeighborsColor(hex, [0, 1, 0, 1], [1, 1, 0.6, 1]);
+			//setHexAndNeighborsColor(hex, [0, 1, 0, 1], [1, 1, 0.6, 1]);
 
 			switch (activeMode) {
+                case Modes.AI:
+                        patrolAi.setNewPatrolPath(hex);
+                    break;
 				case Modes.Line:
 					if(!point2) {
 						ToggleModeMessageDialog('Please select the <strong>ending</strong> hex.');
@@ -274,6 +278,20 @@
 
 	hexGrid.loadMap(bigmap);
 
+    var patrolAi = new PatrolAI(hexGrid,hexGrid.find(4,4),hexGrid.find(6,12));
+    var patrolAi2 = new PatrolAI(hexGrid,hexGrid.find(5,4),hexGrid.find(12,8));
+
+    var player = new Player(hexGrid);
+
+    hexGrid.update = function() {
+        if(activeMode == Modes.AI) {
+            player.tick();
+            patrolAi.tick();
+            patrolAi2.tick();
+        }
+
+    }
+
 	function render() {
 		hexGrid.update();
 		hexGrid.renderOneFrame();
@@ -283,7 +301,7 @@
 	document.onkeydown = function(e) {
 		var event = window.event ? window.event : e;
 		var cam = hexGrid.getCamera();
-
+        var oldMode = activeMode;
 		if(event.keyCode == 39) {
 			cam.moveX(1);
 		}
@@ -297,10 +315,7 @@
 			cam.moveY(-1);
 		}
 		else if(event.keyCode == 65){
-			cam.moveZ(-1);
-		}
-		else if(event.keyCode == 90){
-			cam.moveZ(1);
+			activeMode = Modes.AI;
 		}
 		else if(event.keyCode == 83){
 			cam.adjustAngleDegrees(-5);
@@ -320,6 +335,13 @@
 			ToggleModeMessageDialog('Please select the <strong>starting</strong> hex.');
 			activeMode = Modes.Path;
 		}
+
+        if(activeMode != oldMode) {
+            hexGrid.applyToAllHexes(function(h) {
+                setHexColor(h,[1,1,1,1]);
+            })
+        }
+
 		console.log(cam.getPos());
 	}
 
