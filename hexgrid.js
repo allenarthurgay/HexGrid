@@ -511,6 +511,20 @@ function HexGrid(canvas, use3D) {
 			hex.size = newSize;
 		});
 	}
+    this.findNeighbors = function(hex) {
+        var neighborDeltas =  [
+            [+1,  0],  [+1, -1],  [ 0, -1],
+            [-1,  0],  [-1, +1],  [ 0, +1]
+        ];
+        var neighbors = [];
+        for(var i = 0; i < neighborDeltas.length; ++i) {
+            var n = this.find(hex.q + neighborDeltas[i][0], hex.r + neighborDeltas[i][1]);
+            if(n) {
+                neighbors.push(n);
+            }
+        }
+        return neighbors;
+    }
 
 	this.update = function() {}
 

@@ -42,10 +42,17 @@
 		</script>
 		<script type="text/javascript">
 
+
 			function onCanvasClick(e){
+
+                hexGrid.applyToAllHexes(function(h){h.color = [1,1,1,1];});
 				var hex = hexGrid.findByPixel(e.offsetX, e.offsetY);
 				if(hex){
-                    hex.color = hex.color[0] ? [0,1,0,1] : [1,1,1,1];
+                    var neighbors = hexGrid.findNeighbors(hex);
+                    for(var i = 0; i < neighbors.length; ++i) {
+                        neighbors[i].color = [1,1,0.6,1];
+                    }
+                    hex.color = [0,1,0,1];
 				}
 			}
 
