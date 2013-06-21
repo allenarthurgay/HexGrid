@@ -601,6 +601,21 @@ function HexGrid(canvas, use3D) {
         }
         return range;
     }
+
+    this.getRangeIntersection= function(h1,d1,h2,d2) {
+        var r1 = this.getRange(h1, d1);
+        var r2 = this.getRange(h2, d2);
+        var intersection = [];
+        for(var i = 0; i < r1.length; ++i){
+            for(var j = 0; j < r2.length; ++j) {
+                if(r1[i].equals(r2[j])){
+                    intersection.push(r1[i]);
+                }
+            }
+        }
+        return intersection;
+    }
+
 	this.update = function() {}
 
 	this.getCamera = function() {
