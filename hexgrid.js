@@ -367,25 +367,17 @@ function HexRenderEngine(canvas, use3dRendering) {
 		gl.depthFunc(gl.LEQUAL);
 	}
 
-    function pickHex2D(x,y) {
-        console.log("picked point: ",x,y);
-    }
-
     function intersectLineWithXYPlane(far, near) {
         var vector = [far[0]-near[0],far[1]-near[1],far[2]-near[2]];
         var t = -near[2] / vector[2];
         return [near[0] + t * vector[0], near[1] + t * vector[1]];
     }
-    
-    function pickHex3D(screenX,screenY) {
+
+    this.projectScreenCoordToXYPlane = function(screenX, screenY){
         screenY = gl.viewportHeight - screenY;// canvas starts 0,top to H,bottom -- gl is opposite
         var nearFarPoints = unprojectPoint(screenX,screenY);
-        var point2D = intersectLineWithXYPlane(nearFarPoints[0], nearFarPoints[1]);
-
-        return pickHex2D(point2D[0],point2D[1]);
+        return intersectLineWithXYPlane(nearFarPoints[0], nearFarPoints[1]);
     }
-
-    this.pickHex = pickHex2D;
 
     if(!use3D || !supportsWebGL()) {
         ctx_2D = canvas.getContext('2d');
@@ -394,7 +386,6 @@ function HexRenderEngine(canvas, use3dRendering) {
         drawHex = drawHex2D;
         preRender = preRender2D;
         postRender = postRender2D;
-        this.pickHex = pickHex2D;
     }
     else {
         initGl();
@@ -403,13 +394,12 @@ function HexRenderEngine(canvas, use3dRendering) {
         drawHex = drawHex3D;
         preRender = preRender3D;
         postRender = postRender3D;
-        this.pickHex = pickHex3D;
     }
 
 }
 
 function HexGrid(canvas, use3D) {
-    var hexSize = 0.5;
+    var hexSize = 1.5;
 	var hexRenderList = [];
 	var hexLookup = {};
 	var map = null;
@@ -455,8 +445,8 @@ function HexGrid(canvas, use3D) {
 	}
 
 	function pixelToHex(x, y){
-		var q = ((1/3*Math.sqrt(3) * (x) - 1/3 * y)) / size;
-		var r = (2/3 * y) / size;
+		var q = ((1/3*Math.sqrt(3) * (x) - 1/3 * y)) / hexSize;
+		var r = (2/3 * y) / hexSize;
 		var ret = {
 			q: Math.round(q),
 			r: Math.round(r)
@@ -465,8 +455,15 @@ function HexGrid(canvas, use3D) {
 	}
 
 	this.findByPixel = function(x, y){
-		var coor = pixelToHex(x, y);
-		return this.find(coor.q, coor.r);
+        if(use3D) {
+            var point = renderer.projectScreenCoordToXYPlane(x,y);
+            x = point[0];
+            y = point[1];
+            console.log('projected point: ', x, y);
+        }
+		var hexToFind = pixelToHex(x, y);
+        console.log('hex coords: ', hexToFind.q, hexToFind.r);
+		return this.find(hexToFind.q, hexToFind.r);
 	};
 
 	this.find = function(x, y) {
@@ -518,7 +515,5 @@ function HexGrid(canvas, use3D) {
 	this.update = function() {}
 
     this.pickHex = function(x,y) {
-        var pickedHex = renderer.pickHex(x,y);
-        return pickedHex;
     }
 }

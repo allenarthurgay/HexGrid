@@ -1,10 +1,8 @@
 <html>
 	<body onload="render();">
-        <canvas id="canvas" width="800" height="600" style="border: 1px solid #000" onmousedown="doPickHex(event)">
+        <canvas id="canvas" width="800" height="600" style="border: 1px solid #000" onmousedown="onCanvasClick(event)">
         </canvas>
         <script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
-		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script><!-- -->
-        <!-- <script src="jquery.min.js"></script> <!-- -->
 
         <script id="shader-fs" type="x-shader/x-fragment">
             precision mediump float;
@@ -43,72 +41,29 @@
 
 		</script>
 		<script type="text/javascript">
-			var size = 25;
-			$('#canvas').click(function(e){
 
-				var x = e.pageX - this.offsetLeft;
-				var y = e.pageY - this.offsetTop;
-
-				var hex = hexGrid.findByPixel(x, y);
-
-				if(!hex){
-					return;
+			function onCanvasClick(e){
+				var hex = hexGrid.findByPixel(e.offsetX, e.offsetY);
+				if(hex){
+                    hex.color = hex.color[0] ? [0,1,0,1] : [1,1,1,1];
 				}
-				if(hex.color[0] == 1){
-					hex.color = [0,1,0,1];
-				}
-				else{
-					hex.color = [1,1,1,1];
-				}
-
-			});
+			}
 
 			function takeadump(){
-				$('#mapDumpee').text(JSON.stringify(hexGrid.getMap()));
+                document.getElementById('mapDumpee').innerHTML = JSON.stringify(hexGrid.getMap());
 			}
-		//	$('#saveMap').click(function(){
-		//		alert(1)
-		//	})
-
-            // thanks javascript % bug...
-            // taken from: http://javascript.about.com/od/problemsolving/a/modulobug.htm
-            Number.prototype.mod = function(n) {
-                return ((this%n)+n)%n;
-            }
 
 			var c = document.getElementById('canvas');
-
-            var gridWidth = 7;
-            var gridHeight = 6;
-
             var hexGrid = new HexGrid(c,true);
-            hexGrid.loadMap(generatedMap);
-            hexGrid.update = function() {
-                var rx = (x-hexes).mod(gridWidth);
-                var ry = (y - Math.floor((rx + hexes)/gridWidth)).mod(gridHeight);
-                hexGrid.add(x,y);
-                hexGrid.remove(rx,ry);
-                x = nextX();
-                y = nextY();
-            }
 
-/*            for(var i = -1; i < 2; ++i) {
-                for(var j = -1; j < 2; ++j) {
-                    hexGrid.add(i,j);
-                }
-            }
-*/
+            hexGrid.loadMap(generatedMap);
+
 			function render() {
 				//hexGrid.update();
                 hexGrid.renderOneFrame();
 				window.setTimeout(render, 80);
 			}
 
-            function doPickHex(event) {
-                var x = event.offsetX, y = event.offsetY;
-                console.log("screen: ", x, y);
-                hexGrid.pickHex(x,y)
-            }
             document.onkeydown = function(e) {
                 var event = window.event ? window.event : e;
 
@@ -142,9 +97,10 @@
 			var SQRT_3_2 = 0.8660254037844386;
 
 		</script>
-		      <br/><br/>        <br/><br/>   <br/><br/>
-	<button id='saveMap' onclick="takeadump()">Dump map data</button>        <br/><br/>   <br/><br/>
-	<textarea id='mapDumpee' style='width:300px;height:300px;'></textarea>
+        <br/><br/>
+        <button id='saveMap' onclick="takeadump()">Dump map data</button>
+        <br/>
+        <textarea id='mapDumpee' style='width:300px;height:100px;'></textarea>
 	</body>
 </html>
 
