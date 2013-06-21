@@ -1,7 +1,7 @@
 <html>
 	<body onload="render()">
-		<canvas id="canvas" width="800" height="600" style="border: 1px solid #000">
-		</canvas>
+        <canvas id="canvas" width="800" height="600" style="border: 1px solid #000" onmousedown="doPickHex(event)">
+        </canvas>
         <script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
 
         <script id="shader-fs" type="x-shader/x-fragment">
@@ -74,6 +74,12 @@
                 hexGrid.renderOneFrame();
 				window.setTimeout(render, 80);
 			}
+
+            function doPickHex(event) {
+                var x = event.offsetX, y = event.offsetY;
+                console.log("screen: ", x, y);
+                hexGrid.pickHex(x,y)
+            }
             document.onkeydown = function(e) {
                 var event = window.event ? window.event : e;
 
