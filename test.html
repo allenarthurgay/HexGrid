@@ -2560,6 +2560,9 @@
 	//get screen coor for that hex
 	//
 	function setHexColor(hex, color) {
+		if(hex.blocked){
+			color = [0,0,0,1];
+		}
 		hex.color = color;
 	}
 
@@ -2580,12 +2583,7 @@
 		}
 	}
 
-	function drawLine(hex1, hex2) {
-
-		hexGrid.applyToAllHexes(function(hex){
-			setHexColor(hex, [1, 1, 1, 1]);
-		});
-
+	function drawWall(hex1, hex2){
 		if (!hex1 || !hex2) {
 			return;
 		}
@@ -2593,39 +2591,34 @@
 		var hexes = hexGrid.getLine(hex1, hex2);
 
 		hexes.forEach(function(myHex){
-			setHexColor(myHex, [.3, .9, .3, 1]);
+			markHexAsObstacle(myHex);
 		});
 	}
 
-	function getMousePos(canvas, evt) {
-		var rect = canvas.getBoundingClientRect();
-		return {
-			x: evt.clientX - rect.left,
-			y: evt.clientY - rect.top
-		};
-	}
-	var mousedown = false;
-	canvas.onmousedown = function(e) {
-		mousedown = true;
-	};
+	function drawPath(hex1, hex2){
+		hexGrid.applyToAllHexes(function(hex){
+			hex.g = 0;
+			hex.parent = null;
+			hex.f = 0;
+			hex.h = 0;
+		});
 
-	canvas.onmouseup = function(e) {
-		if (mousedown) {
-			onCanvasClick(e);
+		hexGrid.applyToAllHexes(function(hex){
+			if(!hex.blocked){
+				setHexColor(hex, [1, 1, 1, 1]);
+			}
+		});
+
+		if (!hex1 || !hex2) {
+			return;
 		}
-		mousedown = false;
 
-	};
+		var path = hexGrid.getPath(hex1, hex2);
 
-	/* get this working so that we can drag the map around
-	 canvas.onmousemove = function(e){
-	 if(mousedown){
-	 var pos = getMousePos(canvas, e);
-
-	 console.log('eeeee')
-	 }
-	 console.log("hhoin")
-	 }*/
+		path.forEach(function(myHex){
+			setHexColor(myHex, [.3, .9, .3, 1]);
+		});
+	}
 
 	canvas.onmousewheel = function(e) {
 		var cam = hexGrid.getCamera();
@@ -2634,9 +2627,11 @@
 		var yDelta = e.wheelDeltaY;
 		cam.moveZ(yDelta/50);
 	}
-
 	var point1, point2;
-	function onCanvasClick(e) {
+	var KEY_O = 79;
+
+	canvas.onclick = function(e) {
+
 		var hex = hexGrid.findByPixel(e.offsetX, e.offsetY);
 		if (!point1) {
 			point1 = hex;
@@ -2646,8 +2641,12 @@
 			point1 = hex;
 		}
 		if (hex) {
-			drawLine(point1, point2);
-			resetLastClickedHex();
+			if(currentKey == KEY_O){
+				drawWall(point1, point2);
+			}
+			else{
+				drawPath(point1, point2);
+			}
 			setHexAndNeighborsColor(hex, [0, 1, 0, 1], [1, 1, 0.6, 1]);
 			lastClickedHex = hex;
 		}
@@ -2668,9 +2667,14 @@
 		window.setTimeout(render, 10);
 	}
 
+	var currentKey = null;
+	document.onkeyup = function(e){
+		currentKey = null;
+	}
 	document.onkeydown = function(e) {
 		var event = window.event ? window.event : e;
 		var cam = hexGrid.getCamera();
+		currentKey = event.keyCode;
 
 		if(event.keyCode == 39) {
 			cam.moveX(1);
@@ -2696,10 +2700,22 @@
 		else if(event.keyCode == 88){
 			cam.adjustAngleDegrees(5);
 		}
-		console.log(cam.getPos());
 	}
 
 </script>
+
+<script type="text/javascript">
+	function markHexAsObstacle(hex){
+		hex.blocked = true;
+		setHexColor(hex, [0,0,0,1]);
+	}
+
+	function hexBlocked(hex){
+		return hex.blocked;
+	}
+
+</script>
+
 <br/><br/>
 <button id='saveMap' onclick="takeadump()">Dump map data</button>
 <br/>
