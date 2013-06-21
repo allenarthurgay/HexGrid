@@ -648,10 +648,10 @@ function AStarPathFinderFactory(hexGrid, heuristicsDelegate){
 	}
 
 	function clearNodeOfAddProperties(node){
-		delete node.g;
-		delete node.h;
-		delete node.parent;
-		delete node.f;
+		node.g = 0;
+		node.h = 0;
+		node.parent = null;
+		node.f = 0;
 	}
 
 	function findPath(startHex, endHex){
@@ -674,7 +674,8 @@ function AStarPathFinderFactory(hexGrid, heuristicsDelegate){
 					curr = curr.parent;
 				}
 				var path = ret.reverse();
-				path.forEach(clearNodeOfAddProperties);
+				hexGrid.applyToAllHexes(clearNodeOfAddProperties);
+			//	path.forEach(clearNodeOfAddProperties);
 				return path;
 			}
 
