@@ -1,6 +1,6 @@
-function Hex(x, y, radius) {
-	this.q = x;
-	this.r = y;
+function Hex(q, r, radius) {
+	this.q = q;
+	this.r = r;
 
 	this.x = this.q;
 	this.z = this.r
@@ -295,14 +295,8 @@ function HexRenderEngine(canvas, use3dRendering) {
 
 		for (var i = 0; i < hexes.length; ++i) {
 			var hex = hexes[i];
-			//var x = hex.width() * (hex.q + hex.r/2)
-			//var y = hex.height() * hex.r
-			//	console.log(hex.q, )
-			//var x = hex.q % 2 == 0 ? 0 : hex.width() / 2.0;
 			var x = hex.width() * (hex.q + hex.r / 2);
 			var y = hex.height() * hex.r * 3 / 4.0;
-			//	x += hex.width() * hex.q;
-
 			drawHex(x, y, hex.size, hex.color);
 		}
 
@@ -426,6 +420,14 @@ function HexGrid(canvas, use3D) {
 		var hex = new Hex(mapTile.x, mapTile.y, hexSize);
 		mapHexToTile(hex, mapTile);
 		hexRenderList.push(hex);
+	}
+
+	this.distanceBetween = function hexDistance(hex1, hex2){
+		var abs = Math.abs,
+			x1 = hex1.x, y1=hex1.y, z1=hex1.z,
+			x2 = hex2.x, y2 = hex2.y, z2 = hex2.z;
+
+		return (abs(x1 - x2) + abs(y1 - y2) + abs(z1 - z2)) / 2;
 	}
 
 	this.loadMap = function(mapData) {

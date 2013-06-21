@@ -68,9 +68,18 @@
 				}
 			}
 
+			function getDistance(hex){
+				if(!lastClickedHex){
+					return;
+				}
+
+				var distance = hexGrid.distanceBetween(hex, lastClickedHex);
+				alert(distance);
+			}
 			function onCanvasClick(e){
 				var hex = hexGrid.findByPixel(e.offsetX, e.offsetY);
 				if(hex){
+					getDistance(hex);
 					resetLastClickedHex();
 					setHexAndNeighborsColor(hex, [0,1,0, 1], [1,1,0.6,1]);
 					lastClickedHex = hex;
