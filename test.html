@@ -1,6 +1,6 @@
 <html>
 	<body onload="render();">
-        <canvas id="canvas" width="900" height="900" style="border: 1px solid #000" onmousedown="onCanvasClick(event)">
+        <canvas id="canvas" width="900" height="900" style="border: 1px solid #000" jonmousedown="onCanvasClick(event)" oinmousewheel="onMouseWheel(event)">
         </canvas>
         <script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
 
@@ -45,6 +45,9 @@
 
         </script>
 		<script type="text/javascript">
+
+			var canvas = document.getElementById('canvas');
+
 			var lastClickedHex = null;
 
 			function setHexColor(hex, color){
@@ -76,6 +79,45 @@
 				var distance = hexGrid.distanceBetween(hex, lastClickedHex);
 				alert(distance);
 			}
+
+			function getMousePos(canvas, evt) {
+				var rect = canvas.getBoundingClientRect();
+				return {
+					x: evt.clientX - rect.left,
+					y: evt.clientY - rect.top
+				};
+			}
+			var mousedown = false;
+			canvas.onmousedown = function(e){
+				mousedown = true;
+			};
+
+			canvas.onmouseup = function(e){
+				if(mousedown){
+					onCanvasClick(e);
+				}
+				mousedown = false;
+
+			};
+
+			/* get this working so that we can drag the map around
+			canvas.onmousemove = function(e){
+				if(mousedown){
+					var pos = getMousePos(canvas, e);
+
+					console.log('eeeee')
+				}
+				console.log("hhoin")
+			}*/
+
+			canvas.onmousewheel = function(e){
+				e.cancelBubble=true;
+				e.preventDefault();
+				var yDelta = e.wheelDeltaY;
+				cam_z += yDelta/50;
+			}
+
+
 			function onCanvasClick(e){
 				var hex = hexGrid.findByPixel(e.offsetX, e.offsetY);
 				if(hex){
