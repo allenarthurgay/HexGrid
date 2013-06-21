@@ -80,7 +80,6 @@
 		setHexColor(hex, color);
 	}
 
-
 	function resetLastClickedHex(){
 		if(!lastClickedHex){
 			return;
@@ -200,12 +199,15 @@
                     break;
 				case Modes.Line:
 					if(!point2) {
+                        setHexColor(hex,[0,1,0,1]);
 						ToggleModeMessageDialog('Please select the <strong>ending</strong> hex.');
 						lastClickedHex = hex;
 						break;
 					}
 					else {
 						drawLine(point1, point2);
+                        setHexColor(point1,[1,0,0,1]);
+                        setHexColor(point2,[1,0,0,1]);
 						ToggleModeMessageDialog();
 						ModeReset();
 						break;
@@ -288,8 +290,8 @@
 
 	hexGrid.loadMap(bigmap);
 
-    var patrolAi = new PatrolAI(hexGrid,hexGrid.find(4,4),hexGrid.find(6,12));
-    var patrolAi2 = new PatrolAI(hexGrid,hexGrid.find(5,4),hexGrid.find(12,8));
+    var patrolAi = new PatrolAI(hexGrid,hexGrid.find(4,4),hexGrid.find(26,22));
+    var patrolAi2 = new PatrolAI(hexGrid,hexGrid.find(25,4),hexGrid.find(22,8));
 
     var player = new Player(hexGrid);
 
@@ -382,6 +384,11 @@
             ToggleModeMessageDialog('Please select a hex')
             activeMode = Modes.Range;
         }
+        else if(event.keyCode == 81) {
+            hexGrid.applyToAllHexes(function(h) {
+                setHexColor(h,[1,1,1,1]);
+            })
+        }
 
         if(activeMode != oldMode) {
             hexGrid.applyToAllHexes(function(h) {
@@ -405,12 +412,12 @@
 	}
 
 </script>
-<div id="modeMessageDialog" style="display: hidden"></div>
+<div id="modeMessageDialog" style="display: hidden"></div><!--
 <br/><br/>
 <button id='saveMap' onclick="takeadump()">Dump map data</button>
 <br/>
 <textarea id='mapDumpee' style='width:300px;height:100px;'></textarea>
-
+-->
 </body>
 </html>
 
