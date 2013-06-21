@@ -237,9 +237,7 @@
                     cam.adjustAngleDegrees(5);
                 }
                 else if(event.keyCode == 76){
-                    var modeMessageDialog = $('#modeMessageDialog');
-                    modeMessageDialog.text('Please select the <strong>starting</strong> hex.');
-                    modeMessageDialog.show();
+                    ToggleModeMessageDialog('Please select the <strong>starting</strong> hex.');
                     activeMode = 'l';
                 }
                 console.log(cam.getPos());
