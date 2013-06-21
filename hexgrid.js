@@ -1,3 +1,76 @@
+function Player(hexGrid) {
+    var me;
+    function tick() {
+        if(me) {
+            me.color = [1,1,1,1];
+        }
+        var canvasSize = hexGrid.getCanvasSize();
+        me = hexGrid.findByPixel(canvasSize[0]/2, canvasSize[1]/2);
+
+        if(me) {
+            me.color = [1,0,0,1];
+        }
+    }
+    return {
+        tick: tick
+    }
+}
+
+function PatrolAI(hexGrid, start, end) {
+    var path = hexGrid.getLine(start,end);
+    var time = new Date().getTime();
+    var tickTime = 300;
+    var pathPos = 0;
+    var pathDir = 1;
+    var activePathColor = [0.8,0.8,0.8,1];
+    var clearPathColor = [1,1,1,1];
+    var myColor = [0.5,0.3,0.3,1];
+
+    setNewPatrolPath(path[path.length-1]);
+
+    function colorPath(color) {
+        for(var i = 0; i < path.length; ++i) {
+            path[i].color = color;
+        }
+    }
+
+    function setNewPatrolPath(hex) {
+        colorPath(clearPathColor);
+        var me = path[pathPos];
+        path = hexGrid.getLine(me,hex);
+
+        colorPath(activePathColor);
+        me.color = myColor;
+        pathPos = 0;
+    }
+
+    function reCalculatePath() {
+        pathPos = 0;
+        setNewPatrolPath(path[path.length-1])
+    }
+
+    function tick() {
+        var delta = new Date().getTime() - time;
+
+        if(tickTime < delta) {
+            path[pathPos].color = activePathColor;
+            pathPos += pathDir;
+            if(pathPos > path.length-1 || pathPos < 0) {
+                pathDir = -pathDir;
+                pathPos += pathDir;
+            }
+            path[pathPos].color = myColor;
+            time = new Date().getTime();
+        }
+    }
+
+    return {
+        tick: tick,
+        setNewPatrolPath: setNewPatrolPath,
+        reCalculatePath: reCalculatePath
+    }
+}
+
 function Vector(x, y, z){
 	this.x = x;
 	this.y = y;
@@ -397,6 +470,8 @@ function HexGrid(canvas, use3D) {
 	var map = null;
 
 	var renderer = new HexRenderEngine(canvas, use3D);
+
+    this.getCanvasSize = function() {return [canvas.width, canvas.height];}
 
 	function makeHexToMapKey(q, r) {
 		return q + "_" + r ;

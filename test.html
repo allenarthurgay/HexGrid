@@ -153,10 +153,12 @@
                     point1 = hex;
                 }
                 if (hex) {
-                    drawLine(point1, point2);
+                    //drawLine(point1, point2);
                     //resetLastClickedHex();
                     //setHexAndNeighborsColor(hex, [0, 1, 0, 1], [1, 0.2, 0.1, 1]);
-                    drawIntersection(hex);
+                    //drawIntersection(hex);
+
+                    patrolAi.setNewPatrolPath(hex);
                     lastClickedHex = hex;
                 }
             }
@@ -169,6 +171,17 @@
             var hexGrid = new HexGrid(c);
 
             hexGrid.loadMap(bigmap);
+
+            var patrolAi = new PatrolAI(hexGrid,hexGrid.find(4,4),hexGrid.find(6,12));
+            var patrolAi2 = new PatrolAI(hexGrid,hexGrid.find(5,4),hexGrid.find(12,8));
+
+            var player = new Player(hexGrid);
+
+            hexGrid.update = function() {
+                player.tick();
+                patrolAi.tick();
+                patrolAi2.tick();
+            }
 
 			function render() {
 				hexGrid.update();
