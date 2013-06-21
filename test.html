@@ -64,12 +64,17 @@
 				hex.color = color;
 			}
 
+            function setHexesColor(hexes, color){
+                for(var i = 0; i < hexes.length; ++i) {
+                    setHexColor(hexes[i], color);
+                }
+            }
+
 			function setHexAndNeighborsColor(hex, color, neighborColor){
 				//var neighbors = hexGrid.findNeighbors(hex);
-				var neighbors = hexGrid.getRing(hex,3);
-				for(var i = 0; i < neighbors.length; ++i) {
-					setHexColor(neighbors[i], neighborColor);
-				}
+				//var neighbors = hexGrid.getRing(hex,3);
+                var neighbors = hexGrid.getRange(hex,3);
+                setHexesColor(neighbor, neighborColor);
 				setHexColor(hex, color);
 			}
 
@@ -101,24 +106,24 @@
 			}
 			
 			function getMousePos(canvas, evt) {
-		var rect = canvas.getBoundingClientRect();
-		return {
-			x: evt.clientX - rect.left,
-			y: evt.clientY - rect.top
-		};
-	}
-	var mousedown = false;
-	canvas.onmousedown = function(e) {
-		mousedown = true;
-	};
+                var rect = canvas.getBoundingClientRect();
+                return {
+                    x: evt.clientX - rect.left,
+                    y: evt.clientY - rect.top
+                };
+            }
+            var mousedown = false;
+            canvas.onmousedown = function(e) {
+                mousedown = true;
+            };
 
-	canvas.onmouseup = function(e) {
-		if (mousedown) {
-			onCanvasClick(e);
-		}
-		mousedown = false;
+            canvas.onmouseup = function(e) {
+                if (mousedown) {
+                    onCanvasClick(e);
+                }
+                mousedown = false;
 
-	};
+            };
 
 	/* get this working so that we can drag the map around
 	 canvas.onmousemove = function(e){
@@ -130,13 +135,24 @@
 	 console.log("hhoin")
 	 }*/
 
-	canvas.onmousewheel = function(e) {
-		var cam = hexGrid.getCamera();
-		e.cancelBubble = true;
-		e.preventDefault();
-		var yDelta = e.wheelDeltaY;
-		cam.moveZ(yDelta/50);
-	}
+            canvas.onmousewheel = function(e) {
+                var cam = hexGrid.getCamera();
+                e.cancelBubble = true;
+                e.preventDefault();
+                var yDelta = e.wheelDeltaY;
+                cam.moveZ(yDelta/50);
+            }
+            function drawIntersection(hex) {
+                if(lastClickedHex) {
+                    var r1 = hexGrid.getRange(hex, 4);
+                    var r2 = hexGrid.getRange(lastClickedHex, 4);
+                    var ri = hexGrid.getRangeIntersection(hex, 4, lastClickedHex, 4);
+                    setHexesColor(r1,[1,0,0,1]);
+                    setHexesColor(r2,[0,0,1,1]);
+                    setHexesColor(ri,[0,1,0,1]);
+
+                }
+            }
 
 	var point1, point2;
 	function onCanvasClick(e) {
@@ -190,19 +206,7 @@
                 }
 
             }
-	 /*
 
-
-
-			function onCanvasClick(e){
-				var hex = hexGrid.findByPixel(e.offsetX, e.offsetY);
-				if(hex){
-					resetLastClickedHex();
-					setHexAndNeighborsColor(hex, [0,1,0, 1], [1,1,0.6,1]);
-					lastClickedHex = hex;
-				}
-			}
-*/
 			function takeadump(){
                 document.getElementById('mapDumpee').innerHTML = JSON.stringify(hexGrid.getMap());
 			}

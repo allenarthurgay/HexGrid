@@ -15,7 +15,7 @@ function Hex(q, r, radius) {
 	this.r = r;
 
 	this.x = this.q;
-	this.z = this.r
+	this.z = this.r;
 	this.y = -this.x - this.z;
 
 	this.size = radius;
@@ -584,6 +584,38 @@ function HexGrid(canvas, use3D) {
         }
         return ring;
     }
+
+    this.getRange = function(hex, distance) {
+        var range = [hex];
+        for(var dx = -distance; dx <=distance; ++dx) {
+            for(var dy = Math.max(-distance, -dx-distance); dy <= Math.min(distance, -dx + distance); ++dy) {
+                var dz = -dx-dy;
+
+                var q = hex.x + dx;
+                var r = hex.z + dz;
+                var h = this.find(q,r);
+                if(h) {
+                    range.push(h);
+                }
+            }
+        }
+        return range;
+    }
+
+    this.getRangeIntersection= function(h1,d1,h2,d2) {
+        var r1 = this.getRange(h1, d1);
+        var r2 = this.getRange(h2, d2);
+        var intersection = [];
+        for(var i = 0; i < r1.length; ++i){
+            for(var j = 0; j < r2.length; ++j) {
+                if(r1[i].equals(r2[j])){
+                    intersection.push(r1[i]);
+                }
+            }
+        }
+        return intersection;
+    }
+
 	this.update = function() {}
 
 	this.getCamera = function() {
