@@ -121,12 +121,6 @@
 	}
 
 	function drawPath(hex1, hex2){
-		/*hexGrid.applyToAllHexes(function(hex){
-			if(!hex.blocked){
-				setHexColor(hex, [1, 1, 1, 1]);
-			}
-		});  */
-
 		if (!hex1 || !hex2) {
 			return;
 		}
@@ -200,9 +194,6 @@
 			point1 = hex;
 		}
 		if (hex) {
-
-			//setHexAndNeighborsColor(hex, [0, 1, 0, 1], [1, 1, 0.6, 1]);
-
 			switch (activeMode) {
                 case Modes.AI:
                         patrolAi.setNewPatrolPath(hex);
