@@ -153,17 +153,82 @@ function HexRenderEngine(canvas, use3dRendering) {
         hexOutlineVertexBuffer.numItems = 7;
 	}
 
-    function createModelViewMatrix(x,y,r) {
-		mat4.identity(mvMatrix);
-        mat4.translate(mvMatrix, [-cam_x,-cam_y,-cam_z]);
-        mat4.rotate(mvMatrix,degree*Math.PI/180.0,[1,0,0],mvMatrix);
+    function unprojectPoint(sx, sy) {
+        var cameraMatrix = mat4.create();
+        var projectionMatrix = mat4.create();
+        var inverseMatrix = mat4.create();
+        var pvMat = mat4.create();
+
+        mat4.identity(inverseMatrix);
+        setViewMatrix(cameraMatrix);
+        setProjectionMatrix(projectionMatrix);
+        mat4.multiply(projectionMatrix, cameraMatrix, pvMat);
+        mat4.inverse(pvMat, inverseMatrix);
+        var inNear = [];
+        inNear[0] = (sx - gl.viewportX)/gl.viewportWidth*2.0 - 1.0; // normalize window X coord to -1 to 1
+        inNear[1] = (sy - gl.viewportY)/gl.viewportHeight*2.0 - 1.0; // normalize window Y coord to -1 to 1
+        inNear[2] = -1.0; // 2.0 * sz - 1.0 but optimized for near plane click
+        inNear[3] = 1.0; // 1 = point, 0 = vector
+
+        var inFar = [];
+        inFar[0] = (sx - gl.viewportX)/gl.viewportWidth*2.0 - 1.0; // normalize window X coord to -1 to 1
+        inFar[1] = (sy - gl.viewportY)/gl.viewportHeight*2.0 - 1.0; // normalize window Y coord to -1 to 1
+        inFar[2] = 1.0; // 2.0 * sz - 1.0 but optimized for far plane click
+        inFar[3] = 1.0; // 1 = point, 0 = vector
+
+        var near = [0,0,0,0];
+        var far = [0,0,0,0];
+
+        mat4.multiply(inverseMatrix, inNear, near);
+
+        if(near[3] == 0.0) {
+            console.log("unproject point resulted in 0 for w coordinate. Does this ever happen?");
+            return null;
+        }
+
+        //normalize output
+        near[3] = 1.0/near[3];
+        near[0] = near[0]*near[3];
+        near[1] = near[1]*near[3];
+        near[2] = near[2]*near[3];
+
+
+        mat4.multiply(inverseMatrix, inFar, far);
+
+        if(far[3] == 0.0) {
+            console.log("unproject point resulted in 0 for w coordinate. Does this ever happen?");
+            return null;
+        }
+
+        //normalize output
+        far[3] = 1.0/far[3];
+        far[0] = far[0]*far[3];
+        far[1] = far[1]*far[3];
+        far[2] = far[2]*far[3];
+
+        return [[near[0], near[1], near[2]],[far[0], far[1], far[2]]];
+    }
+
+    function setProjectionMatrix(m) {
+        mat4.identity(m);
+        mat4.perspective(fieldOfVision/2.0, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, m);
+    }
+
+    function setViewMatrix(m) {
+        mat4.identity(m);
+        mat4.translate(m, [-cam_x,-cam_y,-cam_z]);
+        mat4.rotate(m,degree*Math.PI/180.0,[1,0,0],m);
+    }
+
+    function setModelViewMatrix(x,y,r) {
+        setViewMatrix(mvMatrix);
         mat4.translate(mvMatrix, [x,y,0]);
         mat4.scale(mvMatrix,[r*2,r*2,1]);
 
     }
     var drawHex3D = function(x,y,r,fillColor) {
 
-        createModelViewMatrix(x,y,r);
+        setModelViewMatrix(x,y,r);
 
         gl.bindBuffer(gl.ARRAY_BUFFER, pointUpHexVertexBuffer);
 
@@ -240,9 +305,7 @@ function HexRenderEngine(canvas, use3dRendering) {
 	}
 
 	var preRender3D = function() {
-        mat4.identity(pMatrix);
-		mat4.perspective(fieldOfVision / 2.0, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, pMatrix);
-
+        setProjectionMatrix(pMatrix);
 	}
 
 	var preRender2D = function() {}
@@ -261,7 +324,9 @@ function HexRenderEngine(canvas, use3dRendering) {
 
 	var clear3D = function() {
 		gl.clearColor(0, 0, 0, 1.0);
-		gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+        gl.viewportX = 0;
+        gl.viewportY = 0;
+        gl.viewport(gl.viewportX,gl.viewportY,gl.viewportWidth,gl.viewportHeight);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 	}
 
@@ -302,7 +367,17 @@ function HexRenderEngine(canvas, use3dRendering) {
 		gl.depthFunc(gl.LEQUAL);
 	}
 
+    function intersectLineWithXYPlane(far, near) {
+        var vector = [far[0]-near[0],far[1]-near[1],far[2]-near[2]];
+        var t = -near[2] / vector[2];
+        return [near[0] + t * vector[0], near[1] + t * vector[1]];
+    }
 
+    this.projectScreenCoordToXYPlane = function(screenX, screenY){
+        screenY = gl.viewportHeight - screenY;// canvas starts 0,top to H,bottom -- gl is opposite
+        var nearFarPoints = unprojectPoint(screenX,screenY);
+        return intersectLineWithXYPlane(nearFarPoints[0], nearFarPoints[1]);
+    }
 
     if(!use3D || !supportsWebGL()) {
         ctx_2D = canvas.getContext('2d');
@@ -324,7 +399,7 @@ function HexRenderEngine(canvas, use3dRendering) {
 }
 
 function HexGrid(canvas, use3D) {
-    var hexSize = 1.0;
+    var hexSize = 1.5;
 	var hexRenderList = [];
 	var hexLookup = {};
 	var map = null;
@@ -370,8 +445,8 @@ function HexGrid(canvas, use3D) {
 	}
 
 	function pixelToHex(x, y){
-		var q = ((1/3*Math.sqrt(3) * (x) - 1/3 * y)) / size;
-		var r = (2/3 * y) / size;
+		var q = ((1/3*Math.sqrt(3) * (x) - 1/3 * y)) / hexSize;
+		var r = (2/3 * y) / hexSize;
 		var ret = {
 			q: Math.round(q),
 			r: Math.round(r)
@@ -380,8 +455,15 @@ function HexGrid(canvas, use3D) {
 	}
 
 	this.findByPixel = function(x, y){
-		var coor = pixelToHex(x, y);
-		return this.find(coor.q, coor.r);
+        if(use3D) {
+            var point = renderer.projectScreenCoordToXYPlane(x,y);
+            x = point[0];
+            y = point[1];
+            console.log('projected point: ', x, y);
+        }
+		var hexToFind = pixelToHex(x, y);
+        console.log('hex coords: ', hexToFind.q, hexToFind.r);
+		return this.find(hexToFind.q, hexToFind.r);
 	};
 
 	this.find = function(x, y) {
@@ -429,6 +511,23 @@ function HexGrid(canvas, use3D) {
 			hex.size = newSize;
 		});
 	}
+    this.findNeighbors = function(hex) {
+        var neighborDeltas =  [
+            [+1,  0],  [+1, -1],  [ 0, -1],
+            [-1,  0],  [-1, +1],  [ 0, +1]
+        ];
+        var neighbors = [];
+        for(var i = 0; i < neighborDeltas.length; ++i) {
+            var n = this.find(hex.q + neighborDeltas[i][0], hex.r + neighborDeltas[i][1]);
+            if(n) {
+                neighbors.push(n);
+            }
+        }
+        return neighbors;
+    }
 
 	this.update = function() {}
+
+    this.pickHex = function(x,y) {
+    }
 }
