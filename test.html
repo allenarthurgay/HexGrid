@@ -307,6 +307,8 @@
 		}
 		else if(event.keyCode == 65){
 			activeMode = Modes.AI;
+			patrolAi.reCalculatePath();
+			patrolAi2.reCalculatePath();
 		}
 		else if(event.keyCode == 83){
 			cam.adjustAngleDegrees(-5);
