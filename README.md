@@ -17,13 +17,12 @@ Controls
 Modes:
 `L` --> Draw Line
 `O` --> Obstacle
-`R` --> `I` --> Single
-        `P` --> Spiral
-`M` --> Movement Range
+`R` --> Ring (Single)
+`I` --> Intersecting Range
 
 :arrow_up: :arrow_down: :arrow_left: :arrow_right: --> Move camera
 
-`A`/`Z` --> Zoom in/out
+Mousewheel Up/Down --> Zoom in/out
 
 `S`/`X` --> Adjust the angle of the grid
 

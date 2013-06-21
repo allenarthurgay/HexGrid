@@ -234,8 +234,27 @@
 						ModeReset();
 						break;
 					}
+                case Modes.Range:
+                    if(!point2){
+                        setHexColor(hex,[0,1,0,1]);
+                        var hexes = hexGrid.getRange(hex, 4);
+                        setHexesColor(hexes, [0,1,0,1]);
+                        ToggleModeMessageDialog('Please select a second hex to detect intersection');
+                        break;
+                    }
+                    else {
+                        setHexColor(hex,[0,1,0,1]);
+                        var hexes = hexGrid.getRange(hex, 4);
+                        setHexesColor(hexes, [0,.5,0,1]);
+                        var ri = hexGrid.getRangeIntersection(point2, 4, point1, 4);
+                        setHexesColor(ri,[1,0,0,1]);
+                        ToggleModeMessageDialog();
+                        ModeReset();
+                        break;
+                    }
 				default:
 					ModeReset();
+                    setHexColor(hex,[0,1,0,1]);
 					break;
 
 			}
@@ -328,6 +347,10 @@
 			ToggleModeMessageDialog('Please select the <strong>starting</strong> hex.');
 			activeMode = Modes.Path;
 		}
+        else if(event.keyCode == 73){
+            ToggleModeMessageDialog('Please select a hex')
+            activeMode = Modes.Range;
+        }
 
         if(activeMode != oldMode) {
             hexGrid.applyToAllHexes(function(h) {
