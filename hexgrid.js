@@ -15,7 +15,7 @@ function Hex(q, r, radius) {
 	this.r = r;
 
 	this.x = this.q;
-	this.z = this.r
+	this.z = this.r;
 	this.y = -this.x - this.z;
 
 	this.size = radius;
@@ -583,6 +583,23 @@ function HexGrid(canvas, use3D) {
             }
         }
         return ring;
+    }
+
+    this.getRange = function(hex, distance) {
+        var range = [hex];
+        for(var dx = -distance; dx <=distance; ++dx) {
+            for(var dy = Math.max(-distance, -dx-distance); dy <= Math.min(distance, -dx + distance); ++dy) {
+                var dz = -dx-dy;
+
+                var q = hex.x + dx;
+                var r = hex.z + dz;
+                var h = this.find(q,r);
+                if(h) {
+                    range.push(h);
+                }
+            }
+        }
+        return range;
     }
 	this.update = function() {}
 
