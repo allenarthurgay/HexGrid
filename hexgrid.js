@@ -30,9 +30,9 @@ function Hex(q, r, radius) {
 function HexCamera(glContext) {
     var gl = glContext;
     var fieldOfView = 90;
-    var cam_x = 0;
-    var cam_y = 0;
-    var cam_z = 13;
+    var cam_x = 20;
+    var cam_y = 10;
+    var cam_z = 30;
     var degree = -30.0;
 
     function getViewMatrix() {
@@ -536,20 +536,24 @@ function HexGrid(canvas, use3D) {
 		this.draw();
 	}
 
-	this.findNeighbors = function(hex) {
+    this.getNeighbor = function(hex, neighborIdx){
+        var neighborDeltas = [
+            [+1, 0],
+            [+1, -1],
+            [ 0, -1],
+            [-1, 0],
+            [-1, +1],
+            [ 0, +1]
+        ];
 
-		var neighborDeltas = [
-			[+1, 0],
-			[+1, -1],
-			[ 0, -1],
-			[-1, 0],
-			[-1, +1],
-			[ 0, +1]
-		];
+        return this.find(hex.q + neighborDeltas[neighborIdx][0], hex.r + neighborDeltas[neighborIdx][1]);
+    }
+
+	this.findNeighbors = function(hex) {
 
 		var neighbors = [];
 		for (var i = 0; i < neighborDeltas.length; ++i) {
-			var n = this.find(hex.q + neighborDeltas[i][0], hex.r + neighborDeltas[i][1]);
+			var n = this.getNeighbor(hex,i);
 			if (n) {
 				neighbors.push(n);
 			}
@@ -557,6 +561,29 @@ function HexGrid(canvas, use3D) {
 		return neighbors;
 	}
 
+    this.getRing = function(hex,distance) {
+        var q = hex.q-distance, r = hex.r + distance;
+        var ring = [];
+        var neighborDeltas = [
+            [+1, 0],
+            [+1, -1],
+            [ 0, -1],
+            [-1, 0],
+            [-1, +1],
+            [ 0, +1]
+        ];
+        for(var i = 0; i < 6; ++i) {
+            for(var j = 0; j < distance; ++j) {
+                var h = this.find(q, r);
+                if(h){
+                    ring.push(h);
+                }
+                q += neighborDeltas[i][0];
+                r += neighborDeltas[i][1];
+            }
+        }
+        return ring;
+    }
 	this.update = function() {}
 
 	this.getCamera = function() {
