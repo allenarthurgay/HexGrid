@@ -54,7 +54,8 @@
 
 			function setHexAndNeighborsColor(hex, color, neighborColor){
 				//var neighbors = hexGrid.findNeighbors(hex);
-				var neighbors = hexGrid.getRing(hex,3);
+				//var neighbors = hexGrid.getRing(hex,3);
+                var neighbors = hexGrid.getRange(hex,3);
 				for(var i = 0; i < neighbors.length; ++i) {
 					setHexColor(neighbors[i], neighborColor);
 				}
@@ -139,7 +140,7 @@
 		if (hex) {
 			drawLine(point1, point2);
 			//resetLastClickedHex();
-			setHexAndNeighborsColor(hex, [0, 1, 0, 1], [1, 1, 0.6, 1]);
+			setHexAndNeighborsColor(hex, [0, 1, 0, 1], [1, 0.2, 0.1, 1]);
 			lastClickedHex = hex;
 		}
 	} /*
