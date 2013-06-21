@@ -71,10 +71,8 @@
             }
 
 			function setHexAndNeighborsColor(hex, color, neighborColor){
-				//var neighbors = hexGrid.findNeighbors(hex);
-				//var neighbors = hexGrid.getRing(hex,3);
                 var neighbors = hexGrid.getRange(hex,3);
-                setHexesColor(neighbor, neighborColor);
+                setHexesColor(neighbors, neighborColor);
 				setHexColor(hex, color);
 			}
 
