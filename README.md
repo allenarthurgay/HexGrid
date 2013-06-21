@@ -7,7 +7,7 @@ Bad ass hex grid platform for building games
 Features
 ========
 
- * Rendering in 3D with WebGL or 2D using canvas.
+ * Rendering in 3D with WebGL.
  * Picking!
 
 
