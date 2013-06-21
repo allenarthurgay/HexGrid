@@ -200,12 +200,15 @@
                     break;
 				case Modes.Line:
 					if(!point2) {
+                        setHexColor(hex,[0,1,0,1]);
 						ToggleModeMessageDialog('Please select the <strong>ending</strong> hex.');
 						lastClickedHex = hex;
 						break;
 					}
 					else {
 						drawLine(point1, point2);
+                        setHexColor(point1,[1,0,0,1]);
+                        setHexColor(point2,[1,0,0,1]);
 						ToggleModeMessageDialog();
 						ModeReset();
 						break;
