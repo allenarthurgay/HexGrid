@@ -195,7 +195,22 @@
 		if (hex) {
 			switch (activeMode) {
                 case Modes.AI:
-                        patrolAi.setNewPatrolPath(hex);
+                        if(bombMode) {
+                            var r = hexGrid.getRange(hex,3);
+                            for(var i = 0; i < r.length; ++i) {
+                                if(patrolAi2.posHex().equals(r[i])) {
+                                    patrolAi2.die();
+                                }
+                                if(patrolAi.posHex().equals(r[i])) {
+                                    patrolAi.die();
+                                }
+                            }
+                            setHexesColor(r, [.2,.2,.2,1]);
+                            bombMode = false;
+                        }
+                        else {
+                            patrolAi.setNewPatrolPath(hex);
+                        }
                     break;
 				case Modes.Line:
 					if(!point2) {
@@ -294,7 +309,7 @@
     var patrolAi2 = new PatrolAI(hexGrid,hexGrid.find(25,4),hexGrid.find(22,8));
 
     var player = new Player(hexGrid);
-
+    var bombMode = false;
     hexGrid.update = function() {
         if(activeMode == Modes.AI) {
             player.tick();
@@ -357,11 +372,14 @@
 			cam.moveY(-1);
 			}
 		}
-		else if(event.keyCode == 65){
-			activeMode = Modes.AI;
-			patrolAi.reCalculatePath();
-			patrolAi2.reCalculatePath();
-		}
+        else if(event.keyCode == 65){
+            activeMode = Modes.AI;
+            patrolAi.reCalculatePath();
+            patrolAi2.reCalculatePath();
+        }
+        else if(event.keyCode == 66){
+            bombMode = true;
+        }
 		else if(event.keyCode == 83){
 			cam.adjustAngleDegrees(-5);
 		}
@@ -391,6 +409,7 @@
         }
 
         if(activeMode != oldMode) {
+            bombMode = false;
             hexGrid.applyToAllHexes(function(h) {
                 setHexColor(h,[1,1,1,1]);
             })

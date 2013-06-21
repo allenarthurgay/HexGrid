@@ -29,7 +29,8 @@ function PatrolAI(hexGrid, start, end) {
     var activePathColor = [0.8,0.8,0.8,1];
     var clearPathColor = [1,1,1,1];
     var myColor = [0.5,0.3,0.3,1];
-
+    var deadColor= [0.3,0,0,1];
+    var dead = false;
 
     function colorPath(color) {
         for(var i = 0; i < path.length; ++i) {
@@ -46,8 +47,16 @@ function PatrolAI(hexGrid, start, end) {
         me.color = myColor;
         pathPos = 0;
     }
-
+    function posHex() {
+        return path[pathPos];
+    }
+    function die() {
+        dead = true;
+    }
     function reCalculatePath() {
+        if(dead) {
+            return;
+        }
 		var me = path[pathPos];
 		me.color = clearPathColor;
 
@@ -56,6 +65,11 @@ function PatrolAI(hexGrid, start, end) {
     }
 
     function tick() {
+        if(dead) {
+            colorPath(clearPathColor);
+            path[pathPos].color = deadColor;
+            return;
+        }
         var delta = new Date().getTime() - time;
 
         if(tickTime < delta) {
@@ -73,7 +87,9 @@ function PatrolAI(hexGrid, start, end) {
     return {
         tick: tick,
         setNewPatrolPath: setNewPatrolPath,
-        reCalculatePath: reCalculatePath
+        reCalculatePath: reCalculatePath,
+        posHex: posHex,
+        die: die
     }
 }
 
