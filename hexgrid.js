@@ -26,7 +26,6 @@ function PatrolAI(hexGrid, start, end) {
     var clearPathColor = [1,1,1,1];
     var myColor = [0.5,0.3,0.3,1];
 
-    setNewPatrolPath(path[path.length-1]);
 
     function colorPath(color) {
         for(var i = 0; i < path.length; ++i) {
