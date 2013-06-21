@@ -46,6 +46,7 @@ function PatrolAI(hexGrid, start, end) {
     function reCalculatePath() {
 		var me = path[pathPos];
 		me.color = clearPathColor;
+
         pathPos = 0;
         setNewPatrolPath(path[path.length-1])
     }
@@ -104,9 +105,9 @@ function Hex(q, r, radius) {
 function HexCamera(glContext) {
 	var gl = glContext;
 	var fieldOfView = 90;
-	var cam_x = 20;
-	var cam_y = 10;
-	var cam_z = 30;
+	var cam_x = 47;
+	var cam_y = 12;
+	var cam_z = 50;
 	var degree = -30.0;
 
 	function getViewMatrix() {
@@ -749,9 +750,9 @@ function AStarPathFinderFactory(hexGrid, heuristicsDelegate){
 					ret.push(curr);
 					curr = curr.parent;
 				}
+                ret.push(startHex);
 				var path = ret.reverse();
 				hexGrid.applyToAllHexes(clearNodeOfAddProperties);
-			//	path.forEach(clearNodeOfAddProperties);
 				return path;
 			}
 
