@@ -1,7 +1,7 @@
 <html>
 
 <body onload="render();">
-<canvas id="canvas" width="900" height="900" style="border: 1px solid #000">
+<canvas id="canvas" width="900" height="900" style="border: 1px solid #000" onmousemove="onMouseMove(event)">
 </canvas>
 <script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
@@ -114,9 +114,9 @@
 
 		var hexes = hexGrid.getLine(hex1, hex2);
 
-		hexes.forEach(function(myHex){
-			markHexAsObstacle(myHex);
-		});
+        for(var i = 0; i < hexes.length; ++i) {
+            markHexAsObstacle(hexes[i]);
+        }
 	}
 
 	function drawPath(hex1, hex2){
@@ -152,15 +152,18 @@
 
 	};
 
-	/* get this working so that we can drag the map around
-	 canvas.onmousemove = function(e){
-	 if(mousedown){
-	 var pos = getMousePos(canvas, e);
-
-	 console.log('eeeee')
+	//get this working so that we can drag the map around
+	 function onMouseMove(e){
+         /*var pos = getMousePos(canvas, e);
+         var h = hexGrid.findByPixel(pos.x,pos.y);
+         if(mousedown){
+            console.log('down!');
+         }
+         if(h) {
+             h.color = [1,1,0,1];
+         }
+         console.log(pos);*/
 	 }
-	 console.log("hhoin")
-	 }*/
 
 	canvas.onmousewheel = function(e) {
 		var cam = hexGrid.getCamera();
@@ -215,7 +218,6 @@
 				case Modes.Line:
 					if(!point2) {
                         setHexColor(hex,[0,1,0,1]);
-						ToggleModeMessageDialog('Please select the <strong>ending</strong> hex.');
 						lastClickedHex = hex;
 						break;
 					}
@@ -223,31 +225,26 @@
 						drawLine(point1, point2);
                         setHexColor(point1,[1,0,0,1]);
                         setHexColor(point2,[1,0,0,1]);
-						ToggleModeMessageDialog();
 						ModeReset();
 						break;
 					}
 				case Modes.Path:
 					if(!point2) {
-						ToggleModeMessageDialog('Please select the <strong>ending</strong> hex.');
 						lastClickedHex = hex;
 						break;
 					}
 					else {
 						drawPath(point1, point2);
-						ToggleModeMessageDialog();
 						ModeReset();
 						break;
 					}
 
 				case Modes.Obsticle:
 					if(!point2) {
-						ToggleModeMessageDialog('Please select the <strong>ending</strong> hex.');
 						break;
 					}
 					else {
 						drawWall(point1, point2);
-						ToggleModeMessageDialog();
 						ModeReset();
 						break;
 					}
@@ -256,7 +253,6 @@
                         setHexColor(hex,[0,1,0,1]);
                         var hexes = hexGrid.getRange(hex, 4);
                         setHexesColor(hexes, [0,1,0,1]);
-                        ToggleModeMessageDialog('Please select a second hex to detect intersection');
                         break;
                     }
                     else {
@@ -265,7 +261,6 @@
                         setHexesColor(hexes, [0,.5,0,1]);
                         var ri = hexGrid.getRangeIntersection(point2, 4, point1, 4);
                         setHexesColor(ri,[1,0,0,1]);
-                        ToggleModeMessageDialog();
                         ModeReset();
                         break;
                     }
@@ -282,18 +277,6 @@
 		activeMode = Modes.Reset;
 		point1 = null;
 		point2 = null;
-	}
-	function ToggleModeMessageDialog(message){
-		var modeMessageDialog = $('#modeMessageDialog');
-		if(message) {
-			modeMessageDialog.text(message);
-			modeMessageDialog.show();
-		}
-		else {
-			modeMessageDialog.text('');
-			modeMessageDialog.hide();
-		}
-
 	}
 
 	function takeadump(){
@@ -322,7 +305,7 @@
 	function render() {
 		hexGrid.update();
 		hexGrid.renderOneFrame();
-		window.setTimeout(render, 10);
+		window.setTimeout(render, 1);
 	}
 
 	function canPlayerMoveUp(myPlayer){
@@ -387,19 +370,15 @@
 			cam.adjustAngleDegrees(5);
 		}
 		else if(event.keyCode == 76){
-			ToggleModeMessageDialog('Please select the <strong>starting</strong> hex.');
 			activeMode = Modes.Line;
 		}
 		else if(event.keyCode == 79){
-			ToggleModeMessageDialog('Please select the <strong>starting</strong> hex.');
 			activeMode = Modes.Obsticle;
 		}
 		else if(event.keyCode == 80){
-			ToggleModeMessageDialog('Please select the <strong>starting</strong> hex.');
 			activeMode = Modes.Path;
 		}
         else if(event.keyCode == 73){
-            ToggleModeMessageDialog('Please select a hex')
             activeMode = Modes.Range;
         }
         else if(event.keyCode == 81) {
