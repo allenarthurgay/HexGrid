@@ -115,6 +115,9 @@ function Hex(q, r, radius) {
 
 	this.size = radius;
 	this.color = [1, 1, 1, 1];
+    this.texture = 0;
+    this.animationFrame = 0;
+    this.animationTime = 0;
 	this.height = function() {return this.size * 2;}
 	this.width = function() {return 1.7320508 * this.size;} //﻿1.7320508 is ~ Math.sqrt(3)
 	this.equals = function(rHex) {
@@ -248,11 +251,15 @@ function HexCamera(glContext) {
 function HexRenderEngine(canvas) {
 	var gl = undefined;
 	var pointUpHexVertexBuffer;
+    var hexIndexBuffer;
 	var hexOutlineVertexBuffer;
+	var hexTextureVertexBuffer;
 	var mvMatrix = mat4.create(); //modelview
 	var pMatrix = mat4.create();  //perspective
 	var shaderProgram;
+	var textureProgram;
 	var camera;
+    var textureMap = {};
 
 	function getShader(id) {
 		var shaderScript = document.getElementById(id);
@@ -309,19 +316,43 @@ function HexRenderEngine(canvas) {
 
 		shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
 		shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
+
+        var fs = getShader("shader-tex-fs");
+        var vs = getShader("shader-tex-vs");
+
+        textureProgram = gl.createProgram();
+        gl.attachShader(textureProgram, vs);
+        gl.attachShader(textureProgram, fs);
+        gl.linkProgram(textureProgram);
+
+        if (!gl.getProgramParameter(textureProgram, gl.LINK_STATUS)) {
+            alert("Could not initialise shaders");
+        }
+
+		gl.useProgram(textureProgram);
+
+        textureProgram.vertexPositionAttribute = gl.getAttribLocation(textureProgram, "aVertexPosition");
+
+        textureProgram.pMatrixUniform = gl.getUniformLocation(textureProgram, "uPMatrix");
+        textureProgram.mvMatrixUniform = gl.getUniformLocation(textureProgram, "uMVMatrix");
+
+        textureProgram.textureCoordAttribute = gl.getAttribLocation(textureProgram, "aTextureCoord");
+        textureProgram.textureSampler = gl.getUniformLocation(textureProgram, "textureSampler");
 	}
 
-	function setMatrixUniforms() {
-		gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
-		gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
+	function setMatrixUniforms(prog) {
+		gl.uniformMatrix4fv(prog.pMatrixUniform, false, pMatrix);
+		gl.uniformMatrix4fv(prog.mvMatrixUniform, false, mvMatrix);
 	}
 
 	function initBuffers() {
 
 		pointUpHexVertexBuffer = gl.createBuffer();
 		hexOutlineVertexBuffer = gl.createBuffer();
+        hexTextureVertexBuffer = gl.createBuffer();
 
-		var hexVerts = [0.0, 0.0, 0.0];
+		var hexVerts = [0, 0, 0];
+        var texCoords = [0.5, 0.5];
 		var outlineVerts = [];
 
 		for (var i = 0; i <= 6; i++) {
@@ -333,33 +364,124 @@ function HexRenderEngine(canvas) {
 			hexVerts.push(x_i);
 			hexVerts.push(y_i);
 			hexVerts.push(0.0);
+
 			outlineVerts.push(x_i);
 			outlineVerts.push(y_i);
 			outlineVerts.push(0.01);
+
+            texCoords.push(x_i + 0.5);
+            texCoords.push(y_i + 0.5);
 		}
 
 		// re add first point to complete fan
-		hexVerts.push(0.5 * Math.cos(2 * Math.PI / 3));
-		hexVerts.push(0.5 * Math.sin(2 * Math.PI / 3));
+        hexVerts.push(0.5 * Math.cos(2 * Math.PI / 3));
+        hexVerts.push(0.5 * Math.sin(2 * Math.PI / 3));
 		hexVerts.push(0.0);
+
+        // re add first texture coord
+        texCoords.push(0.5 + 0.5 * Math.cos(2 * Math.PI / 3));
+        texCoords.push(0.5 + 0.5 * Math.sin(2 * Math.PI / 3));
 
 		//re add first point to complete outline
 		outlineVerts.push(outlineVerts[0]);
 		outlineVerts.push(outlineVerts[1]);
 		outlineVerts.push(0.0);
 
+        hexIndexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, hexIndexBuffer);
+
+        // This array defines each face as two triangles, using the
+        // indices into the vertex array to specify each triangle's
+        // position.
+
+        var cubeVertexIndices = [
+            0,  1,  2,      0,  2,  3,    // front
+            0,  3,  4,      0,  4,  5,    // back
+            0,  5,  6,      0,  6, 1
+        ];
+
+        // Now send the element array to GL
+
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cubeVertexIndices), gl.STATIC_DRAW);
+
 		gl.bindBuffer(gl.ARRAY_BUFFER, pointUpHexVertexBuffer);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(hexVerts), gl.STATIC_DRAW);
-		gl.bindBuffer(gl.ARRAY_BUFFER, null);
 		pointUpHexVertexBuffer.itemSize = 3;
 		pointUpHexVertexBuffer.numItems = 8;
 
+        gl.bindBuffer(gl.ARRAY_BUFFER, hexTextureVertexBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(texCoords), gl.STATIC_DRAW);
+        hexTextureVertexBuffer.itemSize = 2;
+        hexTextureVertexBuffer.numItems = 8;
+
 		gl.bindBuffer(gl.ARRAY_BUFFER, hexOutlineVertexBuffer);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(outlineVerts), gl.STATIC_DRAW);
-		gl.bindBuffer(gl.ARRAY_BUFFER, null);
 		hexOutlineVertexBuffer.itemSize = 3;
 		hexOutlineVertexBuffer.numItems = 7;
 	}
+    var texturesToLoad = 9;
+    var textureFiles = ["test.png","test2.png","pie0.png","pie1.png","pie2.png","pie3.png","pie4.png","pie5.png","pie6.png"];
+    function createTextureFromImage(image, idx, uniform) {
+        var texture = gl.createTexture();
+        textureMap[idx] = texture;
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        texturesToLoad--;
+        gl.bindTexture(gl.TEXTURE_2D, null);
+
+    }
+    function handleTextureLoaded(image, texture, textureName) {
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+        gl.generateMipmap(gl.TEXTURE_2D);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+    }
+
+    function initTextures() {
+
+        var image = new Image();
+        image.onload = function() { createTextureFromImage(image, 0); }
+        image.src = textureFiles[0];
+
+        var image1 = new Image();
+        image1.onload = function() { createTextureFromImage(image1, 1); }
+        image1.src = textureFiles[1];
+
+        var image2 = new Image();
+        image2.onload = function() { createTextureFromImage(image2, 2); }
+        image2.src = textureFiles[2];
+
+        var image3 = new Image();
+        image3.onload = function() { createTextureFromImage(image3, 3); }
+        image3.src = textureFiles[3];
+
+        var image4 = new Image();
+        image4.onload = function() { createTextureFromImage(image4, 4); }
+        image4.src = textureFiles[4];
+
+        var image5 = new Image();
+        image5.onload = function() { createTextureFromImage(image5, 5); }
+        image5.src = textureFiles[5];
+
+        var image6 = new Image();
+        image6.onload = function() { createTextureFromImage(image6, 6); }
+        image6.src = textureFiles[6];
+
+        var image7 = new Image();
+        image7.onload = function() { createTextureFromImage(image7, 7); }
+        image7.src = textureFiles[7];
+
+        var image8 = new Image();
+        image8.onload = function() { createTextureFromImage(image8, 8); }
+        image8.src = textureFiles[8];
+    }
 
 	function setModelViewMatrix(x, y, size) {
 		mvMatrix = camera.getViewMatrix();
@@ -367,33 +489,85 @@ function HexRenderEngine(canvas) {
 		mat4.scale(mvMatrix, [size * 2, size * 2, 1]);
 	}
 
-	function drawHex(x, y, size, fillColor) {
+    function drawWithTexture(texture) {
+        gl.useProgram(textureProgram);
 
-		setModelViewMatrix(x, y, size);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.uniform1i(textureProgram.textureSampler, 0);
 
-		gl.bindBuffer(gl.ARRAY_BUFFER, pointUpHexVertexBuffer);
+        gl.enableVertexAttribArray(textureProgram.textureCoordAttribute);
+        gl.bindBuffer(gl.ARRAY_BUFFER, hexTextureVertexBuffer);
+        gl.vertexAttribPointer(textureProgram.textureCoordAttribute, hexTextureVertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
-		//set color
-		gl.vertexAttrib4fv(shaderProgram.vertexColorAttribute, new Float32Array(fillColor));
+        gl.enableVertexAttribArray(textureProgram.vertexPositionAttribute);
+        gl.bindBuffer(gl.ARRAY_BUFFER, pointUpHexVertexBuffer);
+        gl.vertexAttribPointer(textureProgram.vertexPositionAttribute, pointUpHexVertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
-		setMatrixUniforms();
 
-		gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, pointUpHexVertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
-		gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
-		gl.drawArrays(gl.TRIANGLE_FAN, 0, pointUpHexVertexBuffer.numItems);
-		gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-		//outline =========================
-		gl.bindBuffer(gl.ARRAY_BUFFER, hexOutlineVertexBuffer);
 
-		gl.vertexAttrib4fv(shaderProgram.vertexColorAttribute, new Float32Array([0, 0, 1, 1]));
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, hexIndexBuffer);
 
-		setMatrixUniforms();
-		gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, hexOutlineVertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
-		gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
-		gl.drawArrays(gl.LINE_STRIP, 0, hexOutlineVertexBuffer.numItems);
-		gl.bindBuffer(gl.ARRAY_BUFFER, null);
-	}
+        setMatrixUniforms(textureProgram);
+
+        gl.drawElements(gl.TRIANGLES, 18, gl.UNSIGNED_SHORT, 0);
+
+        gl.disableVertexAttribArray(textureProgram.textureCoordAttribute);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+        gl.bindTexture(gl.TEXTURE_2D, null);
+    }
+
+    function drawWithColor(color) {
+        gl.useProgram(shaderProgram);
+
+
+        //set color
+        gl.vertexAttrib4fv(shaderProgram.vertexColorAttribute, new Float32Array(color));
+        gl.bindBuffer(gl.ARRAY_BUFFER, pointUpHexVertexBuffer);
+        gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, pointUpHexVertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
+
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, hexIndexBuffer);
+
+        setMatrixUniforms(shaderProgram);
+
+        gl.drawElements(gl.TRIANGLES, 18, gl.UNSIGNED_SHORT, 0);
+
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    }
+
+    function drawOutline() {
+        //outline =========================
+        gl.useProgram(shaderProgram);
+        gl.bindBuffer(gl.ARRAY_BUFFER, hexOutlineVertexBuffer);
+
+        gl.vertexAttrib4fv(shaderProgram.vertexColorAttribute, new Float32Array([0, 0, 1, 1]));
+
+        setMatrixUniforms(shaderProgram);
+        gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, hexOutlineVertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
+        gl.drawArrays(gl.LINE_STRIP, 0, hexOutlineVertexBuffer.numItems);
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    }
+
+    function drawHex(x, y, size, fillColor, texId, frame) {
+
+        setModelViewMatrix(x, y, size);
+
+        if(texId > 0) {
+            var idx = texId == 3 ? texId + frame - 1 : texId - 1;
+            drawWithTexture(textureMap[idx]);
+        }
+        else {
+            drawWithColor(fillColor);
+        }
+
+        drawOutline();
+    }
 
 	function drawHexes(hexes) {
 		preRender();
@@ -402,7 +576,14 @@ function HexRenderEngine(canvas) {
 			var hex = hexes[i];
 			var x = hex.width() * (hex.q + hex.r / 2);
 			var y = hex.height() * hex.r * 3 / 4.0;
-			drawHex(x, y, hex.size, hex.color);
+            if(hex.texture == 3) {
+                hex.animationTime++;
+                if(hex.animationTime > 10) {
+                    hex.animationTime = 0;
+                    hex.animationFrame = (++hex.animationFrame) % 7;
+                }
+            }
+			drawHex(x, y, hex.size, hex.color, hex.texture, hex.animationFrame);
 		}
 
 		postRender();
@@ -461,8 +642,8 @@ function HexRenderEngine(canvas) {
 		catch (e) {
 			console.log(e.message);
 		}
-
 		initShaders();
+        initTextures();
 		initBuffers();
 		gl.enable(gl.DEPTH_TEST);
 		gl.depthFunc(gl.LEQUAL);
@@ -475,23 +656,36 @@ function HexRenderEngine(canvas) {
 		return;
 	}
 
+    function numTextures() {
+        return textureFiles.length;
+    }
+
 	camera = new HexCamera(gl);
 
 	return {
 		camera: camera,
 		drawHexes: drawHexes,
 		clearCanvas: clearCanvas,
-		projectScreenCoordToXYPlane: projectScreenCoordToXYPlane
+		projectScreenCoordToXYPlane: projectScreenCoordToXYPlane,
+        numTextures: numTextures
 	}
 }
 
 function HexGrid(canvas, use3D) {
-	var hexSize = 1.5;
+	var hexSize = 5.0;
 	var hexRenderList = [];
 	var hexLookup = {};
 	var map = null;
 
 	var renderer = new HexRenderEngine(canvas, use3D);
+
+    this.numTextures = function() {
+        return renderer.numTextures();
+    }
+    this.loop = function() {
+        this.update();
+        this.renderOneFrame();
+    }
 
     this.getCanvasSize = function() {return [canvas.width, canvas.height];}
 
