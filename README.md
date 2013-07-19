@@ -1,3 +1,9 @@
+Original Authors
+================
+- [jtrinklein](https://github.com/jtrinklein)
+- [allenarthurgay](https://github.com/allenarthurgay)
+- [djinnx](https://github.com/djinnx)
+
 HexGrid
 =======
 
