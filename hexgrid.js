@@ -420,7 +420,7 @@ function HexRenderEngine(canvas) {
 		hexOutlineVertexBuffer.numItems = 7;
 	}
     var texturesToLoad = 9;
-    var textureFiles = ["test.png","test2.png","pie0.png","pie1.png","pie2.png","pie3.png","pie4.png","pie5.png","pie6.png"];
+    var textureFiles = ["test.png","bad.png","pie0.png","pie1.png","pie2.png","pie3.png","pie4.png","pie5.png","pie6.png"];
     function createTextureFromImage(image, idx, uniform) {
         var texture = gl.createTexture();
         textureMap[idx] = texture;
@@ -445,42 +445,14 @@ function HexRenderEngine(canvas) {
     }
 
     function initTextures() {
+        var textures = textureFiles.map(function(texture,index){
+            var image = new Image();
+            var textureObj = {};
+            image.onload = function(){textureObj.createdTexture = createTextureFromImage(image, index);};
+            image.src = texture;
+            return textureObj;
+        });
 
-        var image = new Image();
-        image.onload = function() { createTextureFromImage(image, 0); }
-        image.src = textureFiles[0];
-
-        var image1 = new Image();
-        image1.onload = function() { createTextureFromImage(image1, 1); }
-        image1.src = textureFiles[1];
-
-        var image2 = new Image();
-        image2.onload = function() { createTextureFromImage(image2, 2); }
-        image2.src = textureFiles[2];
-
-        var image3 = new Image();
-        image3.onload = function() { createTextureFromImage(image3, 3); }
-        image3.src = textureFiles[3];
-
-        var image4 = new Image();
-        image4.onload = function() { createTextureFromImage(image4, 4); }
-        image4.src = textureFiles[4];
-
-        var image5 = new Image();
-        image5.onload = function() { createTextureFromImage(image5, 5); }
-        image5.src = textureFiles[5];
-
-        var image6 = new Image();
-        image6.onload = function() { createTextureFromImage(image6, 6); }
-        image6.src = textureFiles[6];
-
-        var image7 = new Image();
-        image7.onload = function() { createTextureFromImage(image7, 7); }
-        image7.src = textureFiles[7];
-
-        var image8 = new Image();
-        image8.onload = function() { createTextureFromImage(image8, 8); }
-        image8.src = textureFiles[8];
     }
 
 	function setModelViewMatrix(x, y, size) {
@@ -672,7 +644,7 @@ function HexRenderEngine(canvas) {
 }
 
 function HexGrid(canvas, use3D) {
-	var hexSize = 5.0;
+	var hexSize = 50.0;
 	var hexRenderList = [];
 	var hexLookup = {};
 	var map = null;
