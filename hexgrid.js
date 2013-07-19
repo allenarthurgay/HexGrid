@@ -420,7 +420,7 @@ function HexRenderEngine(canvas) {
 		hexOutlineVertexBuffer.numItems = 7;
 	}
     var texturesToLoad = 9;
-    var textureFiles = ["test.png","bad.png","pie0.png","pie1.png","pie2.png","pie3.png","pie4.png","pie5.png","pie6.png"];
+    var textureFiles = ["img/test.png","img/test2.png","img/pie0.png","img/pie1.png","img/pie2.png","img/pie3.png","img/pie4.png","img/pie5.png","img/pie6.png"];
     function createTextureFromImage(image, idx, uniform) {
         var texture = gl.createTexture();
         textureMap[idx] = texture;
