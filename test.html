@@ -3,52 +3,6 @@
 <body onload="startGrid();">
 <canvas id="canvas" width="900" height="900" style="border: 1px solid #000" onmousemove="onMouseMove(event)">
 </canvas>
-<script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
-
-<script id="shader-tex-fs" type="x-shader/x-fragment">
-    varying highp vec2 vTexCoord;
-    uniform sampler2D textureSampler;
-
-	void main(void) {
-	    gl_FragColor = texture2D(textureSampler, vec2(vTexCoord.s,vTexCoord.t));
-	}
-</script>
-
-<script id="shader-tex-vs" type="x-shader/x-vertex">
-	attribute vec3 aVertexPosition;
-    attribute vec2 aTextureCoord;
-
-	uniform mat4 uMVMatrix;
-	uniform mat4 uPMatrix;
-
-    varying highp vec2 vTexCoord;
-
-	void main(void) {
-	    gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
-        vTexCoord = aTextureCoord;
-	}
-</script>
-<script id="shader-fs" type="x-shader/x-fragment">
-    precision mediump float;
-	varying vec4 vColor;
-
-	void main(void) {
-	    gl_FragColor = vColor;
-	}
-</script>
-
-<script id="shader-vs" type="x-shader/x-vertex">
-	attribute vec3 aVertexPosition;
-	attribute vec4 aVertexColor;
-	uniform mat4 uMVMatrix;
-	uniform mat4 uPMatrix;
-	varying vec4 vColor;
-
-	void main(void) {
-        gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
-        vColor = aVertexColor;
-	}
-</script>
 
 <script type="text/javascript" src="hexgrid.js"></script>
 <script type="text/javascript">
