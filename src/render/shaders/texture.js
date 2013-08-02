@@ -1,23 +1,28 @@
-goog.provide('hexgrid.render.shaders.texture');
+define(function(){
+	var texture_fs = "" + 
+		"varying highp vec2 vTexCoord;" +
+		"uniform sampler2D textureSampler;" +
 
-var texture_fs = "" + 
-"varying highp vec2 vTexCoord;" +
-"uniform sampler2D textureSampler;" +
+		"void main(void) {" +
+		"    gl_FragColor = texture2D(textureSampler, vec2(vTexCoord.s,vTexCoord.t));" +
+		"}";
 
-"void main(void) {" +
-"    gl_FragColor = texture2D(textureSampler, vec2(vTexCoord.s,vTexCoord.t));" +
-"}";
+	var texture_vs = "" +
+		"attribute vec3 aVertexPosition;" +
+		"attribute vec2 aTextureCoord;" +
 
-var texture_vs = "" +
-"attribute vec3 aVertexPosition;" +
-"attribute vec2 aTextureCoord;" +
+		"uniform mat4 uMVMatrix;" +
+		"uniform mat4 uPMatrix;" +
 
-"uniform mat4 uMVMatrix;" +
-"uniform mat4 uPMatrix;" +
+		"varying highp vec2 vTexCoord;" +
 
-"varying highp vec2 vTexCoord;" +
-
-"void main(void) {" +
-"    gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);" +
-"    vTexCoord = aTextureCoord;" +
-"}";
+		"void main(void) {" +
+		"    gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);" +
+		"    vTexCoord = aTextureCoord;" +
+		"}";
+		
+	return {
+		vs: texture_vs,
+		fs: texture_fs
+	};
+});

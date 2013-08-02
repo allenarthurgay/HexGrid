@@ -1,22 +1,19 @@
 <html>
 
-<body onload="startGrid();">
-<canvas id="canvas" width="900" height="900" style="border: 1px solid #000" onmousemove="onMouseMove(event)">
+<body>
+<canvas id="canvas" width="900" height="900" style="border: 1px solid #000">
 </canvas>
-
-<script type="text/javascript" src="hexgrid.js"></script>
-<script type="text/javascript">
-	/*var generatedMap = [];
-
-	 for(var i=0; i < 50; i++){
-	 for(var j=0; j < 50; j++){
-	 generatedMap.push({ x: i, y: j, z: 0});
-	 }
-	 } */
-
+<script>
+	var require = {
+		baseUrl : '/src'
+	}
 </script>
+<script type="text/javascript" src="src/require.js"></script>
+
 <script type="text/javascript">
-    var hexGrid = new HexGrid(document.getElementById('canvas'));
+require(['hexgrid','ai','player'],function(HexGrid,AI,Player){
+
+	var hexGrid = new HexGrid(document.getElementById('canvas'));
     var patrolAi, patrolAi2;
     var player;
     var bombMode = false;
@@ -47,8 +44,6 @@
         Texture: 'Texture',
 		Reset: null
 	}
-</script>
-<script type="text/javascript">
 
 	function setHexColor(hex, color){
 		if(hexBlocked(hex)){
@@ -140,18 +135,6 @@
 
 	};
 
-	//get this working so that we can drag the map around
-	 function onMouseMove(e){
-         /*var pos = getMousePos(canvas, e);
-         var h = hexGrid.findByPixel(pos.x,pos.y);
-         if(mousedown){
-            console.log('down!');
-         }
-         if(h) {
-             h.color = [1,1,0,1];
-         }
-         console.log(pos);*/
-	 }
 
 	canvas.onmousewheel = function(e) {
 		var cam = hexGrid.getCamera();
@@ -269,25 +252,7 @@
 		point1 = null;
 		point2 = null;
 	}
-
-	function startGrid() {
-        hexGrid.loadMap(bigmap);
-        patrolAi = new PatrolAI(hexGrid,hexGrid.find(1,1),hexGrid.find(6,9));
-        patrolAi2 = new PatrolAI(hexGrid,hexGrid.find(1,2),hexGrid.find(2,8));
-        player = new Player(hexGrid);
-
-        hexGrid.update = function() {
-            if(activeMode == Modes.AI) {
-                player.tick();
-                patrolAi.tick();
-                patrolAi2.tick();
-            }
-        }
-
-        setInterval(function(){hexGrid.loop()}, 15);
-
-	}
-
+	
 	function canPlayerMoveUp(myPlayer){
 		var pos = myPlayer.currentLocation();
 		var neighbor = hexGrid.getNeighbor(pos, 4);
@@ -385,9 +350,6 @@
 		console.log(cam.getPos());
 	}
 
-</script>
-
-<script type="text/javascript">
 	function markHexAsObstacle(hex){
 		hex.blocked = true;
 		setHexColor(hex, [0,0,0,1]);
@@ -396,8 +358,28 @@
 	function hexBlocked(hex){
 		return hex.blocked;
 	}
+	
+	function startGrid() {
+        hexGrid.loadMap(bigmap);
+        patrolAi = new AI.patrol(hexGrid,hexGrid.find(1,1),hexGrid.find(6,9));
+        patrolAi2 = new AI.patrol(hexGrid,hexGrid.find(1,2),hexGrid.find(2,8));
+        player = new Player(hexGrid);
 
+        hexGrid.update = function() {
+            if(activeMode == Modes.AI) {
+                player.tick();
+                patrolAi.tick();
+                patrolAi2.tick();
+            }
+        }
+
+        setInterval(function(){hexGrid.loop()}, 15);
+
+	}
+	startGrid();
+});
 </script>
+
 <div id="modeMessageDialog" style="display: hidden"></div><!--
 <br/><br/>
 <button id='saveMap' onclick="takeadump()">Dump map data</button>
