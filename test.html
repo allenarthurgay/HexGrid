@@ -11,7 +11,7 @@
 <script type="text/javascript" src="src/require.js"></script>
 
 <script type="text/javascript">
-require(['hexgrid','ai','player'],function(HexGrid,AI,Player){
+require(['hexgrid','ai','player','render/texture/animation'],function(HexGrid,AI,Player,animation){
 
 	var hexGrid = new HexGrid(document.getElementById('canvas'));
     var patrolAi, patrolAi2;
@@ -168,7 +168,21 @@ require(['hexgrid','ai','player'],function(HexGrid,AI,Player){
 		if (hex) {
 			switch (activeMode) {
                 case Modes.Texture:
-                        hex.texture = (++hex.texture) % 4;
+                		if(hex.animation === null) {
+                			hex.animation = new animation.TextureAnimation('test');
+                		}
+                		else if (hex.animation.name === 'test') {
+                			hex.animation = new animation.TextureAnimation('morepie');
+                		}
+                		else if (hex.animation.name === 'morepie'){
+                			hex.animation = new animation.TextureAnimation('ninja');
+                		}
+                		else if (hex.animation.name === 'ninja'){
+                			hex.animation = null;
+                		}
+                		else {
+                			hex.animation = null;
+                		}
                     break;
                 case Modes.AI:
                         if(bombMode) {
@@ -339,7 +353,16 @@ require(['hexgrid','ai','player'],function(HexGrid,AI,Player){
                 setHexColor(h,[1,1,1,1]);
             })
         }
-
+        else if(event.keyCode == 87) {
+        	hexGrid.applyToAllHexes(function(hex) {
+        		hex.animation = new animation.TextureAnimation('water');
+        	});
+        }
+        else if(event.keyCode == 69) {
+        	hexGrid.applyToAllHexes(function(hex) {
+        		hex.animation = null;
+        	});
+        }
         if(activeMode != oldMode) {
             bombMode = false;
             hexGrid.applyToAllHexes(function(h) {
